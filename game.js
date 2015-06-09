@@ -2,16 +2,15 @@
 
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
 output, cash, life, coordinates, time,
-backgroundI, castleI, heroI, healthbarI, marioI, mario,
+backgroundI, castleI, heroI, healthbarI, marioI, mario, warrior, warriorI,
 background, castle,
 towers, towerCost, towerI, towerR, towerCd, towerDamage, towerSelection, aoeT,
-dist,
 monsters, monstersAmt, newMonster, monsterstats, monsterI,
 healthbar,
-wave, checkGG, ffCount, ffCounter,nticks=0, animation
+wave, checkGG, ffCount, ffCounter,nticks=0
 
 //game stats
-monsterstats = [10,4,2,2] //hp,speed,cash,amt
+monsterstats = [[10,4,2],[15,6,2]] //hp,speed,cash,amt
 monsters = [] //monsters on map
 monsterI = [] //types of monster available 
 towers = []   //towers on map
@@ -53,13 +52,8 @@ function init() {
     document.getElementById("pauseBtn").value = "start";
     document.getElementById("cash").value = cash;
     document.getElementById("life").value = life;
-    document.getElementById("wave").value = wave;
+    document.getElementById("wave").value = wave; 
 
-
-    var test = new createjs.Bitmap("images/hero.png")
-    test.x = 352
-    test.y = 224
-    stage.addChild(test)
     /*var test = new createjs.Bitmap(canonI)
     test.x=48
     test.y=48
@@ -127,7 +121,7 @@ function imageurl() {
     //creep-mario
     mario = {
         images: ["images/mario.png"],
-        frames: {width:21, height:40, count:32, spacing:1},
+        frames: {width:21, height:40, count:32},
         animations: {
             right:[0,7],
             up:[8,15],
@@ -137,6 +131,20 @@ function imageurl() {
     };
     marioI = new createjs.SpriteSheet(mario);
     monsterI.push(marioI)
+
+    //creep-mario
+    warrior = {
+        images: ["images/DarkNut.png"],
+        frames: {width:24, height:31, count:16},
+        animations: {
+            right:[0,3],
+            up:[4,7],
+            left:[8,11],
+            down:[12,15]
+        }
+    };
+    warriorI = new createjs.SpriteSheet(warrior);
+    monsterI.push(warriorI)
 };
 
 //handle image load
@@ -146,7 +154,7 @@ function handleImageLoad(event) {
     castle.x = 320;
     castle.y = 192;
 
-    cMonster(monsterstats[0],monsterstats[1],monsterstats[2],monsterstats[3],0);
+    cMonster(monsterstats[0],2,0);
 
     //add to stage
     stage.addChild(castle);
@@ -182,7 +190,7 @@ function handleMouse(event) {
             cash-=towerSelection[4];
             document.getElementById("cash").value=cash;
             towerSelection = false;
-            stage.addChild(towers[towers.length-1]);
+            stage.addChild(newTower);
             toggleAoe();
         };
     };
@@ -197,7 +205,7 @@ function handleTower(event) {
 }
 
 //create monsters
-function cMonster(hp,speed,cash,amt,type) {
+function cMonster(stats,amt,type) {//hp,speed,cash
     for (var i=0; i<amt; i++) {
         healthbar = new createjs.Bitmap(healthbarI);
         healthbar.y= -5;
@@ -208,10 +216,10 @@ function cMonster(hp,speed,cash,amt,type) {
         newMonster.pos = [0,0,1,0]
         newMonster.x = 85;
         newMonster.y = -40 - i*64;
-        newMonster.speed = speed;
-        newMonster.currentHp = hp;
-        newMonster.maxHp = hp;
-        newMonster.cash = cash;
+        newMonster.speed = stats[1];
+        newMonster.currentHp = stats[0];
+        newMonster.maxHp = stats[0];
+        newMonster.cash = stats[2];
         newMonster.dead = 0;
         monsters.push(newMonster);
         stage.addChild(newMonster);
@@ -224,7 +232,7 @@ function cMonster(hp,speed,cash,amt,type) {
 function inRange(tower,mon) {
     var dx=Math.abs(tower.x+16-mon.x);
     var dy=Math.abs(tower.y+16-mon.y);
-    dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+    var dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
     if (dist<=tower.range) {
         return true
     }
@@ -448,11 +456,15 @@ function nextWave() {
         wave++;
         document.getElementById("wave").value = wave;
         if (wave%10==0) {
-           monsterstats[2] += 1 
+           monsterstats[0][2] += 1 
         }
-        monsterstats[0] *= 1.2
-        cMonster(monsterstats[0],monsterstats[1],monsterstats[2],monsterstats[3],0);
+        if (wave%2!=0) {
+            monsterstats[0][0] *= 1.2
+            cMonster(monsterstats[0],2,0);
+        } else {
+            cMonster(monsterstats[1],2,1);
 
+        }
         stage.removeChild(castle);//making sure castle stays on the top layer
         stage.addChild(castle);
     }
