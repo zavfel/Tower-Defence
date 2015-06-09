@@ -1,0 +1,17 @@
+#status {
+    background-color:#eeeeee;
+    height:340px;
+    width:80px;
+    float:left;
+}
+
+#game {
+	height: 544px;
+    width: 896px;
+    float: left;
+    border: solid 1px black; 
+}
+
+.tower {
+	font-size: 14px;
+}
