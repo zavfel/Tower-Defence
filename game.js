@@ -1,3 +1,5 @@
+"use strict";
+
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
 output, cash, life, coordinates, time,
 backgroundI, castleI, heroI, healthbarI, marioI, mario,
@@ -53,6 +55,11 @@ function init() {
     document.getElementById("life").value = life;
     document.getElementById("wave").value = wave;
 
+
+    var test = new createjs.Bitmap("images/hero.png")
+    test.x = 352
+    test.y = 224
+    stage.addChild(test)
     /*var test = new createjs.Bitmap(canonI)
     test.x=48
     test.y=48
@@ -93,19 +100,19 @@ function path() {
 function imageurl() {
     //background image
     backgroundI = new Image();
-    backgroundI.src = "Sprites/firstStage.png"
+    backgroundI.src = "images/firstStage.png"
     //load background
     background = new createjs.Bitmap(backgroundI);
     stage.addChild(background);
 
     //castle image
     castleI = new Image();
-    castleI.src = "Sprites/castle64.png"
+    castleI.src = "images/castle64.png"
     castleI.onload = handleImageLoad;
 
     //tower-hero image
     heroI = new Image();
-    heroI.src = "Sprites/hero.png";
+    heroI.src = "images/hero.png";
     towerI.push(heroI);
     towerR.push(112);
     towerCd.push(19);//1APS
@@ -115,11 +122,11 @@ function imageurl() {
 
     //hp image
     healthbarI = new Image();
-    healthbarI.src = "Sprites/lifebar.png";
+    healthbarI.src = "images/lifebar.png";
 
     //creep-mario
     mario = {
-        images: ["Sprites/mario.png"],
+        images: ["images/mario.png"],
         frames: {width:21, height:40, count:32, spacing:1},
         animations: {
             right:[0,7],
@@ -200,11 +207,12 @@ function cMonster(hp,speed,cash,amt,type) {
         newMonster.addChild(healthbar, m1);
         newMonster.pos = [0,0,1,0]
         newMonster.x = 85;
-        newMonster.y = 50 - i*64;
+        newMonster.y = -40 - i*64;
         newMonster.speed = speed;
         newMonster.currentHp = hp;
         newMonster.maxHp = hp;
         newMonster.cash = cash;
+        newMonster.dead = 0;
         monsters.push(newMonster);
         stage.addChild(newMonster);
     }
@@ -214,12 +222,12 @@ function cMonster(hp,speed,cash,amt,type) {
 
 //check range
 function inRange(tower,mon) {
-	var dx=Math.abs(tower.x+16-mon.x);
-	var dy=Math.abs(tower.y+16-mon.y);
-	dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
-	if (dist<=tower.range) {
-		return true
-	}
+    var dx=Math.abs(tower.x+16-mon.x);
+    var dy=Math.abs(tower.y+16-mon.y);
+    dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
+    if (dist<=tower.range) {
+        return true
+    }
     else {
         return false
     }
@@ -373,13 +381,25 @@ function tick(event) {
                     cAnimation();
                     monsters[i].pos[3]++;
                 }
-            };
+            }
+            else if (monsters[i].x<=352) {
+                if (!monsters[i].dead) {
+                    life-=1;
+                    document.getElementById("life").value = life;
+                    monsters[i].dead++;
+                    stage.removeChild(monsters[i]);
+                    monsters.splice(i,1);
+
+                }
+            }
         };
 
         //lose life 
         for (var i=0;i<monsters.length;i++) {
             if (monsters[i].x==360 &&
                 monsters[i].y==204) {
+                monsters.splice(i,1);
+                stage.removeChild(monsters[i]);
                 life-=1;
                 document.getElementById("life").value = life;
             };
@@ -393,12 +413,13 @@ function tick(event) {
             }
         }
     };
-	
+    
 
-	output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
-		"Time = "+ time +"ticks"+ nticks
-	
-	stage.update(event); // important!!
+    output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
+        "Time = "+ time +"ticks"+ nticks +"\n" +
+        monsters
+    
+    stage.update(event); // important!!
 };
 
 
@@ -430,7 +451,7 @@ function nextWave() {
            monsterstats[2] += 1 
         }
         monsterstats[0] *= 1.2
-        cMonster(monsterstats[0],monsterstats[1],monsterstats[2],monsterstats[3]);
+        cMonster(monsterstats[0],monsterstats[1],monsterstats[2],monsterstats[3],0);
 
         stage.removeChild(castle);//making sure castle stays on the top layer
         stage.addChild(castle);
@@ -451,9 +472,9 @@ function toggleAoe() {
 
 //toggle pause
 function togglePause() {
-	var paused = createjs.Ticker.getPaused();
-	createjs.Ticker.setPaused(!paused);
-	document.getElementById("pauseBtn").value = !paused ? "play" : "pause";
+    var paused = createjs.Ticker.getPaused();
+    createjs.Ticker.setPaused(!paused);
+    document.getElementById("pauseBtn").value = !paused ? "play" : "pause";
     for (var i=0;i<monsters.length;i++) {
         for (var j=0;j<4;j++) {
             if (!paused) {
