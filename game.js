@@ -1,5 +1,3 @@
-"use strict";
-
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
 output, cash, life, coordinates, time,
 backgroundI, castleI, heroI, healthbarI, marioI, mario,
@@ -95,19 +93,19 @@ function path() {
 function imageurl() {
     //background image
     backgroundI = new Image();
-    backgroundI.src = "images/firstStage.png"
+    backgroundI.src = "Sprites/firstStage.png"
     //load background
     background = new createjs.Bitmap(backgroundI);
     stage.addChild(background);
 
     //castle image
     castleI = new Image();
-    castleI.src = "images/castle64.png"
+    castleI.src = "Sprites/castle64.png"
     castleI.onload = handleImageLoad;
 
     //tower-hero image
     heroI = new Image();
-    heroI.src = "images/hero.png";
+    heroI.src = "Sprites/hero.png";
     towerI.push(heroI);
     towerR.push(112);
     towerCd.push(19);//1APS
@@ -117,11 +115,11 @@ function imageurl() {
 
     //hp image
     healthbarI = new Image();
-    healthbarI.src = "images/lifebar.png";
+    healthbarI.src = "Sprites/lifebar.png";
 
     //creep-mario
     mario = {
-        images: ["images/mario.png"],
+        images: ["Sprites/mario.png"],
         frames: {width:21, height:40, count:32, spacing:1},
         animations: {
             right:[0,7],
