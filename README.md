@@ -1,1 +1,1 @@
-# A Tower-Defence Game using Createjs
+# A Simple Tower-Defence Game using Createjs
