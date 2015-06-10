@@ -302,6 +302,7 @@ function tick(event) {
                             monsters.splice(j,1);
                             document.getElementById("cash").value=cash;
                         }
+                        break;
                     }
                 }
             }
