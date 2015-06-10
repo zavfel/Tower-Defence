@@ -172,7 +172,7 @@ function buyTower(index) {
 function handleMouse(event) {
     event.target.alpha = (event.type == "mouseover") ? .3 : 0.01;
     if (event.type == "click") {
-        if (towerSelection) {
+        if (towerSelection && towerSelection[4]<=cash) {
             var newTower = new createjs.Bitmap(towerSelection[0]);
             newTower.range = towerSelection[1];
             newTower.maxCd = towerSelection[2]
@@ -430,6 +430,17 @@ function tick(event) {
     stage.update(event); // important!!
 };
 
+//toggle aoe
+function toggleAoe() {
+    for (var i=0;i<aoeT.length;i++) {
+        if (towerSelection) {
+            stage.addChild(aoeT[i]);
+        } else {
+            stage.removeChild(aoeT[i]);
+        }
+    }
+    stage.update();
+}
 
 // fast forward
 function ff() {
@@ -468,18 +479,6 @@ function nextWave() {
         stage.removeChild(castle);//making sure castle stays on the top layer
         stage.addChild(castle);
     }
-}
-
-//toggle aoe
-function toggleAoe() {
-    for (var i=0;i<aoeT.length;i++) {
-        if (towerSelection) {
-            stage.addChild(aoeT[i]);
-        } else {
-            stage.removeChild(aoeT[i]);
-        }
-    }
-    stage.update();
 }
 
 //toggle pause
