@@ -201,7 +201,9 @@ function handleMouse(event) {
 
 //handle tower upgrades
 function handleTower(event) {
-    event.target
+    if (event.type=="click") {
+
+    }
 }
 
 //create monsters
@@ -282,7 +284,7 @@ function tick(event) {
             for (var i=0;i<towers.length;i++) {
                 if (towers[i].cd>0) {
                     towers[i].cd--;
-                    break;
+                    continue;
                 };
 
                 for (var j=0;j<monsters.length;j++) {
