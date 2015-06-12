@@ -1,8 +1,9 @@
 #status {
     background-color:#eeeeee;
-    height:340px;
-    width:80px;
+    height:544px;
+    width:90px;
     float:left;
+    border: solid 1px black;
 }
 
 #game {
@@ -12,6 +13,18 @@
     border: solid 1px black; 
 }
 
-.tower {
-	font-size: 14px;
+.gameInfo {
+	font-size: 16px;
+	margin: 0;
+	list-style: none;
+	padding-left: 5px;
+}
+
+#infoText {
+	font-size: 16px;
+	padding-left: 5px;
+}
+
+#errorText {
+	color: red;
 }
