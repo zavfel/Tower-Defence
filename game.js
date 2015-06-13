@@ -9,40 +9,30 @@
 -Game Grids*/
 
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
+output, cash, health, coordinates, time, castleData, wave, //game data
 s1, s2,//monster sprites
-t1,
-iceTowerI,
-output, cash, life, coordinates, time,
-backgroundI, castleI, heroI, healthbarI, marioI, mario, warrior, warriorI,
-background, castle,
-towerI, towerCost, towerR, towerCd, towerDamage, towers, 
-towerType, aoeT, targetTower, tInfo, towerData,
-monsters, monstersAmt, newMonster, monsterstats, monsterData,
-monsterI,
-healthbar,
-castleData,
-wave, checkGG, ffCount, ffCounter, errorCD, nticks=0
+backgroundI, background, castleI, castle, //canvas images & variable
+heroI, lightTowerI, iceTowerI, //tower images
+healthbarI, healthbar, marioI, warriorI, //monster images
+towerData, towers, towerType, targetTower, aoeT, //tower variables
+monsterData, monsters, //monster variables
+checkGG, ffCount, ffCounter, errorCD, nticks=0
 
 /*#########################################################################
 
                 Game Data
 
 #########################################################################*/
-castleData = [100,0,0,0]//hp,armor,attack,regen
-monsterData = {} //dictionary of monsters
+castleData = {"hp":100,"armor":0,"attack":0,"regen":0}
+monsterData = {} //types of monsters
 monsters = [] //monsters on map
-towerData = {} //dictionary of towers
-targetTower = false 
-towers = []   //towers on map
-towerI = []   //types of tower available
-towerCost = []
-towerR = []
-towerCd = []
-towerDamage = []
-towerType = false
+towerData = {} //types of towers
+towers = []   //towers currently on map
+targetTower = false //selected tower on map
+towerType = false //selected tower to buy
 aoeT = []
 cash = 25;
-life = 10;
+health = 10;
 wave = 1;
 checkGG = 0;
 ffCount = [20,40,80]
@@ -72,10 +62,10 @@ function init() {
     stage = new createjs.Stage("demoCanvas");
     stage.enableMouseOver();
 
-    //load image into canvas
-    imageload();
-    //load grid of map
-    grid();
+    imageload(); //load image into canvas
+    grid(); //load grid onto map
+    addTower(); //creates tower data
+    addMonster(); //creates monster data
     //line of creep path
     //path();
 
@@ -84,8 +74,13 @@ function init() {
 
     //edit UI
     document.getElementById("pauseBtn").value = "start";
+    document.getElementById("castleText").innerHTML = 
+    "Armor: " + castleData["armor"] + "<br>" +
+    "Atk Bonus: " + castleData["attack"] + "%" +"<br>" +
+    "Regen: " + castleData["regen"]
+
     document.getElementById("cash").innerHTML += cash;
-    document.getElementById("life").innerHTML += life;
+    document.getElementById("health").innerHTML += health;
     document.getElementById("wave").innerHTML += wave; 
 
     /*var test = new createjs.Bitmap(canonI)
@@ -144,23 +139,13 @@ function imageload() {
     castle.y = 192;
     stage.addChild(castle);
 
-    //tower-hero image
-    heroI = new Image();
-    heroI.src = "images/hero.png";
-    towerI.push(heroI);
-    towerR.push(112);
-    towerCd.push(19);//1APS
-    towerDamage.push(5);
-    towerCost.push(10);
+    //light tower
+    lightTowerI = new Image();
+    lightTowerI.src = "images/light_tower.png"
 
-    t1 = {
-        images: ["images/icetower.png"],
-        frames: {width:30, height:30, count:4},
-        animations: {
-            animate:[0,4]
-        }
-    }
-    iceTowerI = new createjs.SpriteSheet(t1)
+    //ice tower
+    iceTowerI = new Image();
+    iceTowerI.src = "images/ice_tower.png";
 
     //hp image
     healthbarI = new Image();
@@ -192,24 +177,6 @@ function imageload() {
     };
     warriorI = new createjs.SpriteSheet(s2);
 
-    //update to tower data
-    //ice tower
-    towerData["iceTower"] =
-    {"image":iceTowerI, 
-    "range":112, "cost":10, "cd":19, "damage":5, "upCost":[25]}
-
-    //update to monster data
-    //mario
-    monsterData["mario"] =
-    {"image":marioI, "w": 21, "h": 40, 
-    "speed":4, "hp":10, "bounty":2, "damage":1}
-    //warrior
-    monsterData["warrior"] =
-    {"image":warriorI, "w": 24, "h": 31, 
-    "speed":4, "hp":10, "bounty":2, "damage":1}
-
-
-
 };
 
 /*#########################################################################
@@ -217,6 +184,19 @@ function imageload() {
                 Tower Objects
 
 #########################################################################*/
+//create tower data
+function addTower() {
+    //light tower
+    towerData["lightTower"] =
+    {"image":lightTowerI,
+    "range":112, "cost":10, "cd":19, "damage":5, "upCost":[25]}
+
+    //ice tower
+    towerData["iceTower"] =
+    {"image":iceTowerI, "slow":2,
+    "range":112, "cost":10, "cd":19, "damage":5, "upCost":[25]}
+}
+
 
 //buying tower
 function buyTower(type) {
@@ -227,7 +207,7 @@ function buyTower(type) {
     "Dmg type: " + "<br>" +
     "Dmg: " + towerType["damage"] + "<br>" +
     "Atk Spd: " + towerType["cd"]/19 + "APS" + "<br>" +
-    "Range: " + towerType["range"] + "tiles" +"<br>" +
+    "Range: " + towerType["range"]/32 + " tiles" +"<br>" +
     "Cost: " + towerType["cost"] + "<br>"
 };
 
@@ -237,7 +217,7 @@ function buildTower(event) {
     if (event.type == "click") {
         if (towerType) {
             if (towerType["cost"]<=cash) {
-                var newTower = new createjs.Sprite(towerType["image"]);
+                var newTower = new createjs.Bitmap(towerType["image"]);
                 newTower.level = 1;
                 newTower.range = towerType["range"];
                 newTower.maxCd = towerType["cd"];
@@ -319,6 +299,19 @@ function upgradeTower() {
                 Monster Objects
 
 #########################################################################*/
+//creates monster data
+function addMonster() {
+    //mario
+    monsterData["mario"] =
+    {"image":marioI, "w": 21, "h": 40, 
+    "speed":4, "hp":10, "bounty":2, "damage":1}
+
+    //warrior
+    monsterData["warrior"] =
+    {"image":warriorI, "w": 24, "h": 31, 
+    "speed":6, "hp":5, "bounty":2, "damage":1}
+}
+
 
 //add monster to canvas
 function cMonster(type,amt) {
@@ -330,13 +323,14 @@ function cMonster(type,amt) {
         healthbar.y = -5
         var m1 = new createjs.Sprite(mtype["image"])
         //add properties to monster
-        newMonster = new createjs.Container()
+        var newMonster = new createjs.Container()
         newMonster.addChild(healthbar, m1)
         newMonster.pos = [0,0,1,0]
         newMonster.w = mtype["w"]
         newMonster.h = mtype["h"] 
         newMonster.x = 96 - newMonster.w/2
         newMonster.y = - newMonster.h - i*newMonster.h*1.5
+        newMonster.dmg = mtype["damage"]
         newMonster.speed = mtype["speed"]
         newMonster.currentHp = mtype["hp"]
         newMonster.maxHp = mtype["hp"]
@@ -401,58 +395,16 @@ function inRange(tower,mon) {
 //ticker events
 function tick(event) {
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
-    if (errorCD) {
-        if (errorCD==1) {
-            document.getElementById("errorText").innerHTML = ""
-        }
-        errorCD--;
-    }
+    errorTextcd();
 
     if (!createjs.Ticker.getPaused()) {
         nticks++
-        if (towers.length!=0) {
-            for (var i=0;i<towers.length;i++) {
-                if (towers[i].cd>0) {
-                    towers[i].cd--;
-                    continue;
-                };
-                for (var j=0;j<monsters.length;j++) {
-                    if (inRange(towers[i],monsters[j]) && monsters[j].y>=0) {
-                        monsters[j].currentHp-=towers[i].damage;
-                        monsters[j].getChildAt(0).sourceRect = 
-                        new createjs.Rectangle(0,0,monsters[j]
-                            .currentHp/monsters[j].maxHp*monsters[j].w,3);
-                        towers[i].cd=towers[i].maxCd;
 
-                        //remove monster from map
-                        if (monsters[j].currentHp<=0) {
-                            stage.removeChild(monsters[j]);
-                            cash+=monsters[j].cash;
-                            monsters.splice(j,1);
-                            document.getElementById("cash").innerHTML="cash: "+
-                            cash;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
+        towerAttacks();//check for tower attack
+        monsterMovement();//controls monster movement
 
-        //monster path
-        monsterMovement();
 
-        //lose life 
-        for (var i=0;i<monsters.length;i++) {
-            if (monsters[i].x==360 &&
-                monsters[i].y==204) {
-                monsters.splice(i,1);
-                stage.removeChild(monsters[i]);
-                life-=1;
-                document.getElementById("life").innerHTML ="life: " + life;
-            };
-        };
-
-        if (life==0) {
+        if (health==0) {
             checkGG++;
             if (checkGG==1) {
                 isOver();
@@ -467,6 +419,15 @@ function tick(event) {
 
     stage.update(event); // important!!
 };
+
+function errorTextcd() {
+    if (errorCD) {
+        if (errorCD==1) {
+            document.getElementById("errorText").innerHTML = ""
+        }
+        errorCD--;
+    }    
+}
 
 //monster path
 function monsterMovement() {
@@ -563,14 +524,46 @@ function monsterMovement() {
                 mob.pos[3]++;
             }
         }
-        else if (mob.x<=352) {
+        //monster attacks
+        else { 
             if (!mob.dead) {
-                life-=1;
-                document.getElementById("life").innerHTML ="life: " + life;
+                health-=mob.dmg;
+                document.getElementById("health").innerHTML ="health: " + health;
                 mob.dead++;
                 stage.removeChild(mob);
                 monsters.splice(i,1);
 
+            }
+        }
+    }
+}
+
+//tower attacking
+function towerAttacks() {
+    if (towers) {
+        for (var i=0;i<towers.length;i++) {
+            if (towers[i].cd>0) {
+                towers[i].cd--;
+                continue;
+            };
+            for (var j=0;j<monsters.length;j++) {
+                if (inRange(towers[i],monsters[j]) && monsters[j].y>=0) {
+                    monsters[j].currentHp-=towers[i].damage;
+                    monsters[j].getChildAt(0).sourceRect = 
+                    new createjs.Rectangle(0,0,monsters[j]
+                        .currentHp/monsters[j].maxHp*monsters[j].w,3);
+                    towers[i].cd=towers[i].maxCd;
+
+                    //remove monster from map
+                    if (monsters[j].currentHp<=0) {
+                        stage.removeChild(monsters[j]);
+                        cash+=monsters[j].bounty;
+                        monsters.splice(j,1);
+                        document.getElementById("cash").innerHTML="cash: "+
+                        cash;
+                    }
+                    break;
+                }
             }
         }
     }
@@ -679,6 +672,8 @@ function restart() {
 function isOver() {
     if (confirm("Game Over!!"+"\n"+"Do you want to restart?") == true) {
         restart();
+    } else {
+        togglePause();
     }
 }
 

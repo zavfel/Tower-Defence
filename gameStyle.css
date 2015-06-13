@@ -1,7 +1,7 @@
 #status {
     background-color:#eeeeee;
     height:544px;
-    width:90px;
+    width:120px;
     float:left;
     border: solid 1px black;
 }
@@ -14,8 +14,10 @@
 }
 
 .titles {
+	font-size: 17px;
 	margin: 0px;
 	padding-bottom: 0px;
+	padding-left: 2px;
 }
 .gameInfo {
 	font-size: 16px;
