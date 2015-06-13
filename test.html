@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EaselJS demo: Mouse Events</title>
+	<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>
+	<script>
+		var stage, output;
+		
+		function init() {
+			stage = new createjs.Stage("demoCanvas");
+			
+			output = new createjs.Text("","14px Arial");
+			output.x = output.y = 10;
+			stage.addChild(output);
+			
+			var square = new createjs.Shape();
+			square.graphics.beginFill("green").drawRect(-50, -50, 100, 100);
+			square.x = 250;
+			square.y = 100;
+			square.name = "square";
+			stage.addChild(square);
+
+		    t1 = {
+		        images: ["images/icetower.png"],
+		        frames: {width:30, height:30, count:4},
+		        animations: {
+		            animate:[0,4]
+		        }
+		    }
+		    marioI = new createjs.SpriteSheet(t1);
+		    var monsterD = {}
+		    monsterD["t1"] = 
+		    {"images":marioI, "w":5}
+		    var tz = monsterD["t1"]
+		    mario = new createjs.Sprite(tz["images"]);
+		    mario.x = tz["w"]
+		    mario.y = 50
+		    mario.gotoAndPlay("animate")
+		    stage.addChild(mario)
+
+		    var testing = stage.getChildAt(2)
+			
+			stage.update();
+
+			output.text = testing
+			
+			// to save CPU, we're only updating when we need to, instead of on a tick:1
+			stage.update();
+		}
+	</script>
+</head>
+<body onload="init();">
+	<canvas id="demoCanvas" width="500" height="200">
+		alternate content
+	</canvas>
+</body>
+</html>

@@ -13,6 +13,10 @@
     border: solid 1px black; 
 }
 
+.titles {
+	margin: 0px;
+	padding-bottom: 0px;
+}
 .gameInfo {
 	font-size: 16px;
 	margin: 0;
@@ -21,7 +25,7 @@
 }
 
 #infoText {
-	font-size: 16px;
+	font-size: 14px;
 	padding-left: 5px;
 }
 

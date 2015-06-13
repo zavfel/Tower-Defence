@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Tower Defense</title>
+	<title>Tower Defense(beta)</title>
 	<link href="gameStyle.css" rel="stylesheet" type="text/css">
 	<!--offline-->
 	<script src="easeljs-0.7.0.min.js"></script>
@@ -13,21 +13,25 @@
 <body onload="init()">
 	<!--<div id="dimension">-->
 		<div id="status">
+			<div><p class="titles">Castle Info</p>
+				<p id="castleText"></p>
+			</div>
+			<p id="cash" class="gameInfo">cash: </p>
+			<p id="life" class="gameInfo">life: </p>
+			<p id="wave" class="gameInfo">wave: </p>
 			<input type="button" value="start" id="pauseBtn" onclick="togglePause()"><br>
 			<input type="button" value="next wave" id="nextBtn" onclick="nextWave()">
 			<br>
 			<input type="button" value="1x" id="ffBtn" onclick="ff()">
 			<br>
-			<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
 			<input type="button" value="Check Range" id="rangeBtn" onclick="towerSelection=(towerSelection)?false:true;toggleAoe()"><br>
-			<p id="cash" class="gameInfo">cash: </p>
-			<p id="life" class="gameInfo">life: </p>
-			<p id="wave" class="gameInfo">wave: </p>
-			<button type="submit" onclick="buyTower(0)">
+			<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
+			<button type="submit" onclick="buyTower('iceTower')">
 				<img src="images/hero.png" height="20" width="20">
-				cost:10
 			</button>
-			<div>Tower Info
+
+			<div> 
+				<p class="titles">Tower Info</p>
 				<p id="infoText"></p>
 				<p id="errorText"></p>
 			</div>
