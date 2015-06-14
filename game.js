@@ -14,7 +14,7 @@ s1, s2,//monster sprites
 backgroundI, background, castleI, castle, //canvas images & variable
 heroI, lightTowerI, iceTowerI, //tower images
 healthbarI, healthbar, marioI, warriorI, //monster images
-towerData, towers, towerType, targetTower, aoeT, //tower variables
+towerData, towers, towerType, towerName, targetTower, aoeT, //tower variables
 monsterData, monsters, //monster variables
 checkGG, ffCount, ffCounter, errorCD, nticks=0
 
@@ -23,15 +23,16 @@ checkGG, ffCount, ffCounter, errorCD, nticks=0
                 Game Data
 
 #########################################################################*/
-castleData = {"hp":100,"armor":0,"attack":0,"regen":0}
+castleData = {"hp":100,"armor":1,"attack":0,"regen":0}
 monsterData = {} //types of monsters
 monsters = [] //monsters on map
 towerData = {} //types of towers
 towers = []   //towers currently on map
 targetTower = false //selected tower on map
 towerType = false //selected tower to buy
+towerName = false 
 aoeT = []
-cash = 25;
+cash = 50;
 health = 10;
 wave = 1;
 checkGG = 0;
@@ -59,7 +60,7 @@ targetGrid.graphics.beginStroke("#fff").drawRect(0,0,32,32);
 #########################################################################*/
 
 function init() {
-    stage = new createjs.Stage("demoCanvas");
+    stage = new createjs.Stage("playingField");
     stage.enableMouseOver();
 
     imageload(); //load image into canvas
@@ -189,26 +190,27 @@ function addTower() {
     //light tower
     towerData["lightTower"] =
     {"image":lightTowerI,
-    "range":112, "cost":10, "cd":19, "damage":5, "upCost":[25]}
+    "range":[112,112], "cost":[10,25], "cd":[19,19], "damage":[5,10]}
 
     //ice tower
     towerData["iceTower"] =
     {"image":iceTowerI, "slow":2,
-    "range":112, "cost":10, "cd":19, "damage":5, "upCost":[25]}
+    "range":[112], "cost":[15], "cd":[19], "damage":[2]}
 }
 
 
 //buying tower
 function buyTower(type) {
     towerType = towerData[type];
+    towerName = type
     toggleAoe();
     stage.removeChild(targetGrid);
     document.getElementById("infoText").innerHTML = 
     "Dmg type: " + "<br>" +
-    "Dmg: " + towerType["damage"] + "<br>" +
-    "Atk Spd: " + towerType["cd"]/19 + "APS" + "<br>" +
-    "Range: " + towerType["range"]/32 + " tiles" +"<br>" +
-    "Cost: " + towerType["cost"] + "<br>"
+    "Dmg: " + towerType["damage"][0] + "<br>" +
+    "Atk Spd: " + towerType["cd"][0]/19 + "APS" + "<br>" +
+    "Range: " + towerType["range"][0]/32 + " tiles" +"<br>" +
+    "Cost: " + towerType["cost"][0] + "<br>"
 };
 
 //building tower onto canvas
@@ -216,14 +218,19 @@ function buildTower(event) {
     event.target.alpha = (event.type == "mouseover") ? .3 : 0.01;
     if (event.type == "click") {
         if (towerType) {
-            if (towerType["cost"]<=cash) {
+            if (towerType["cost"][0]<=cash) {
+                $(document).ready(function() {
+                    $('.tower').removeClass('selected');
+                });
                 var newTower = new createjs.Bitmap(towerType["image"]);
+                newTower.name = towerName;
                 newTower.level = 1;
-                newTower.range = towerType["range"];
-                newTower.maxCd = towerType["cd"];
+                newTower.maxLevel = towerType["damage"].length;
+                newTower.range = towerType["range"][0];
+                newTower.maxCd = towerType["cd"][0];
                 newTower.cd = 0;
-                newTower.damage = towerType["damage"];
-                newTower.upgradeCost = towerType["upCost"];
+                newTower.damage = towerType["damage"][0];
+                newTower.cost = towerType["cost"][1];
                 newTower.x = event.target.coord[0];
                 newTower.y = event.target.coord[1];
                 newTower.coord = event.target.coord
@@ -234,9 +241,10 @@ function buildTower(event) {
                     newTower.x+14,newTower.y+16,newTower.range);
                 aoe.alpha = .5; 
                 aoeT.push(aoe)
-                cash-=towerType["cost"];
-                document.getElementById("cash").innerHTML = "cash: " + cash;
+                cash -= towerType["cost"][0];
+                document.getElementById("cash").innerHTML = "Cash: " + cash;
                 towerType = false;
+                towerName = false;
                 stage.addChild(newTower);
                 toggleAoe();
             } else {
@@ -252,6 +260,9 @@ function buildTower(event) {
 //handle tower info & upgrades
 function handleInfo(event) {
     if (event.type=="click") {
+        $(document).ready(function() {
+            $('.tower').removeClass('selected');
+        });
         targetGrid.x=event.target.coord[0];
         targetGrid.y=event.target.coord[1];
         stage.addChild(targetGrid);
@@ -263,30 +274,39 @@ function handleInfo(event) {
 
 //update tower info
 function updateInfo(tower) {
-    var nextlvl = [tower.level+1,tower.damage+5]
+    var nextlvl = tower.level+1
     //tower info
     document.getElementById("infoText").innerHTML = 
-    (tower.upgradeCost[tower.level-1])?
-    "Lvl: " + tower.level +"-->" + nextlvl[0] + "<br>" +
-    "Dmg: " + tower.damage + "-->" + nextlvl[1] + "<br>" +
-    "Range: " + tower.range/32 +  "<br>" +
+    (targetTower.level < targetTower.maxLevel)?
+    "Lvl: " + tower.level +" --> " + (tower.level+1) + "<br>" +
+    "Dmg: " + tower.damage + " --> " + 
+    towerData[tower.name]["damage"][tower.level] + "<br>" +
+    "Range: " + tower.range/32 + " --> " +  
+    towerData[tower.name]["range"][tower.level]/32 + "<br>" +
+    "Atk Spd: " + tower.maxCd/19 + " --> " +  
+    towerData[tower.name]["cd"][tower.level]/19 + "<br>" +
     "Upgrade Cost: " +
-    tower.upgradeCost[tower.level-1] + "<br>" +
+    towerData[tower.name]["cost"][tower.level] + "<br>" +
     "<input type='button' value='upgrade' onclick='upgradeTower()'>"
+
     : "Lvl: " + tower.level + "<br>" +
     "Dmg: " + tower.damage + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
+    "Atk Spd: " + tower.maxCd/19 + "<br>" +
     "Max lvl"
 }
 
 //upgrading of tower
 function upgradeTower() {
-    var cost = targetTower.upgradeCost[targetTower.level-1]
-    if (cost<=cash) {
-        cash-=cost
-        document.getElementById("cash").innerHTML = "cash: " + cash
-        targetTower.level+=1
-        targetTower.damage+=5
+    if (targetTower.cost<=cash) {
+        cash-=targetTower.cost
+        document.getElementById("cash").innerHTML = "Cash: " + cash
+        targetTower.cost = 
+        towerData[targetTower.name]["cost"][targetTower.level]
+        targetTower.damage = 
+        towerData[targetTower.name]["damage"][targetTower.level] 
+        targetTower.level += 1       
+
         updateInfo(targetTower);
     } else {
         error("Insufficient Cash!");
@@ -394,7 +414,6 @@ function inRange(tower,mon) {
 
 //ticker events
 function tick(event) {
-    time = Math.round(createjs.Ticker.getTime(true)/100)/10
     errorTextcd();
 
     if (!createjs.Ticker.getPaused()) {
@@ -414,6 +433,8 @@ function tick(event) {
     };
     
     //testings
+
+    time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
         "Time = "+ time +"ticks"+ nticks +"\n" 
 
@@ -527,8 +548,8 @@ function monsterMovement() {
         //monster attacks
         else { 
             if (!mob.dead) {
-                health-=mob.dmg;
-                document.getElementById("health").innerHTML ="health: " + health;
+                health-=mob.dmg-castleData["armor"];
+                document.getElementById("health").innerHTML ="Health: " + health;
                 mob.dead++;
                 stage.removeChild(mob);
                 monsters.splice(i,1);
@@ -616,7 +637,7 @@ function ff() {
 function nextWave() {
     if (!createjs.Ticker.getPaused()) {
         wave++;
-        document.getElementById("wave").innerHTML = "wave: " + wave;
+        document.getElementById("wave").innerHTML = "Wave: " + wave;
         if (wave%10==0) {
         }
         if (wave%2!=0) {
