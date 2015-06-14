@@ -23,7 +23,7 @@ checkGG, ffCount, ffCounter, errorCD, nticks=0
                 Game Data
 
 #########################################################################*/
-castleData = {"hp":100,"armor":1,"attack":0,"regen":0}
+castleData = {"hp":100,"armor":0,"attack":10,"regen":0}
 monsterData = {} //types of monsters
 monsters = [] //monsters on map
 towerData = {} //types of towers
@@ -189,13 +189,13 @@ function imageload() {
 function addTower() {
     //light tower
     towerData["lightTower"] =
-    {"image":lightTowerI,
-    "range":[112,112], "cost":[10,25], "cd":[19,19], "damage":[5,10]}
+    {"image":lightTowerI, "type":"Single",
+    "range":[112,112], "cost":[10,25], "cd":[20,20], "damage":[5,10]}
 
     //ice tower
     towerData["iceTower"] =
-    {"image":iceTowerI, "slow":2,
-    "range":[112], "cost":[15], "cd":[19], "damage":[2]}
+    {"image":iceTowerI, "type":"Splash", "splashArea":[32], "slow":[2],
+    "range":[112], "cost":[15], "cd":[20], "damage":[2]}
 }
 
 
@@ -206,10 +206,10 @@ function buyTower(type) {
     toggleAoe();
     stage.removeChild(targetGrid);
     document.getElementById("infoText").innerHTML = 
-    "Dmg type: " + "<br>" +
+    "Dmg Type: " + towerType["type"] + "<br>" +
     "Dmg: " + towerType["damage"][0] + "<br>" +
-    "Atk Spd: " + towerType["cd"][0]/19 + "APS" + "<br>" +
     "Range: " + towerType["range"][0]/32 + " tiles" +"<br>" +
+    "Atk Spd: " + towerType["cd"][0]/20 + "APS" + "<br>" +
     "Cost: " + towerType["cost"][0] + "<br>"
 };
 
@@ -230,11 +230,17 @@ function buildTower(event) {
                 newTower.maxCd = towerType["cd"][0];
                 newTower.cd = 0;
                 newTower.damage = towerType["damage"][0];
+                newTower.bonus = 
+                Math.round(castleData["attack"]/100*newTower.damage)
                 newTower.cost = towerType["cost"][1];
                 newTower.x = event.target.coord[0];
                 newTower.y = event.target.coord[1];
                 newTower.coord = event.target.coord
                 newTower.on("click", handleInfo); 
+                if (towerName == "iceTower") {
+                    newTower.splashArea = towerType["splashArea"][0];
+                    newTower.slow = towerType["slow"][0];
+                }
                 towers.push(newTower);
                 var aoe = new createjs.Shape();
                 aoe.graphics.beginStroke("#000").drawCircle(
@@ -263,6 +269,9 @@ function handleInfo(event) {
         $(document).ready(function() {
             $('.tower').removeClass('selected');
         });
+        towerType = false;
+        towerName = false;
+
         targetGrid.x=event.target.coord[0];
         targetGrid.y=event.target.coord[1];
         stage.addChild(targetGrid);
@@ -283,16 +292,16 @@ function updateInfo(tower) {
     towerData[tower.name]["damage"][tower.level] + "<br>" +
     "Range: " + tower.range/32 + " --> " +  
     towerData[tower.name]["range"][tower.level]/32 + "<br>" +
-    "Atk Spd: " + tower.maxCd/19 + " --> " +  
-    towerData[tower.name]["cd"][tower.level]/19 + "<br>" +
-    "Upgrade Cost: " +
+    "Atk Spd: " + tower.maxCd/20 + " --> " +  
+    towerData[tower.name]["cd"][tower.level]/20 + "<br>" +
+    "Upgrade Cost: " + tower.bonus +
     towerData[tower.name]["cost"][tower.level] + "<br>" +
     "<input type='button' value='upgrade' onclick='upgradeTower()'>"
 
     : "Lvl: " + tower.level + "<br>" +
     "Dmg: " + tower.damage + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
-    "Atk Spd: " + tower.maxCd/19 + "<br>" +
+    "Atk Spd: " + tower.maxCd/20 + "<br>" +
     "Max lvl"
 }
 
@@ -436,7 +445,7 @@ function tick(event) {
 
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
-        "Time = "+ time +"ticks"+ nticks +"\n" 
+        "Time = "+ time 
 
     stage.update(event); // important!!
 };
@@ -569,7 +578,7 @@ function towerAttacks() {
             };
             for (var j=0;j<monsters.length;j++) {
                 if (inRange(towers[i],monsters[j]) && monsters[j].y>=0) {
-                    monsters[j].currentHp-=towers[i].damage;
+                    monsters[j].currentHp-=towers[i].damage + towers[i].bonus;
                     monsters[j].getChildAt(0).sourceRect = 
                     new createjs.Rectangle(0,0,monsters[j]
                         .currentHp/monsters[j].maxHp*monsters[j].w,3);
