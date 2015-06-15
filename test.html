@@ -2,7 +2,6 @@
 <html>
 <head>
 	<title>EaselJS demo: Mouse Events</title>
-	<link href="../_shared/demo.css" rel="stylesheet" type="text/css">
 	<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>
 	<script>
 		var stage, output;
@@ -28,7 +27,7 @@
 			square.x = 250;
 			square.y = 100;
 			square.name = "square";
-			stage.addChild(square);
+			//stage.addChild(square);
 			
 			// add a handler for all the events we're interested in:
 			circle.on("click", handleMouseEvent);
@@ -40,14 +39,22 @@
 			square.on("dblclick", handleMouseEvent);
 			square.on("mouseover", handleMouseEvent);
 			square.on("mouseout", handleMouseEvent);
-			
+			var test = new createjs.Shape();
+            test.graphics.beginFill("#f00").drawRect(0,
+                0,32,32)	
+            var test1 = new createjs.Container();
+
+
+            test1.addChild(test,square)
+            stage.addChild(test1)
+            test1.removeChild(test)		
 			stage.update();
 		}
 		
 		function handleMouseEvent(evt) {
 			output.text = "evt.target: "+evt.target+", evt.type: "+evt.type;
 			if (evt.type == "click") {
-				evt.target.mouseEnabled = false
+
 			}
 			// to save CPU, we're only updating when we need to, instead of on a tick:1
 			stage.update();

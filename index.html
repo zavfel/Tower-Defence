@@ -3,7 +3,7 @@
 <head>
 	<title>Tower Defense(beta)</title>
 	<link href="gameStyle.css" rel="stylesheet" type="text/css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script src="jquery-1.11.3.min.js"></script>
 	<!--offline-->
 	<script src="easeljs-0.7.0.min.js"></script>
 	<!--online-->
@@ -11,9 +11,9 @@
 	<script src="game.js"> </script>
 	<script>
 	$(document).ready(function() {
-		$('.tower').click(
+		$('.towerBtn').click(
 			function(){
-			$('.tower').removeClass('selected');
+			$('.towerBtn').removeClass('selected');
 			$(this).addClass('selected');
 		})
 	})
@@ -35,11 +35,13 @@
 			<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
 			<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
 			<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
-			<button type="submit" onclick="buyTower('lightTower')" class="tower">
-				<img src="images/light_tower.png" height="20" width="20">
+			<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
+				<img src="images/light_tower.png" class="tower">
+				<p class="towerName">Light Tower</p>
 			</button>			
-			<button type="submit" onclick="buyTower('iceTower')" class="tower">
-				<img src="images/ice_tower.png" height="20" width="20">
+			<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
+				<img src="images/ice_tower.png" class="tower">
+				<p class="towerName">Ice Tower</p>
 			</button>
 
 			<div> 
