@@ -203,7 +203,9 @@ function addTower() {
 function buyTower(type) {
     towerType = towerData[type];
     towerName = type
-    toggleAoe();
+    if (aoeT.length != 0) {
+        toggleAoe();        
+    }
     stage.removeChild(targetGrid);
     document.getElementById("infoText").innerHTML = 
     "Dmg Type: " + towerType["type"] + "<br>" +
@@ -222,7 +224,9 @@ function buildTower(event) {
                 $(document).ready(function() {
                     $('.tower').removeClass('selected');
                 });
+                event.target.mouseEnabled = false;
                 var newTower = new createjs.Bitmap(towerType["image"]);
+                newTower.bg = event.target
                 newTower.name = towerName;
                 newTower.level = 1;
                 newTower.maxLevel = towerType["damage"].length;
@@ -279,31 +283,35 @@ function handleInfo(event) {
         updateInfo(targetTower);
 
     }
-}
+};
 
 //update tower info
 function updateInfo(tower) {
-    var nextlvl = tower.level+1
+    var nextlvl = tower.level + 1
     //tower info
     document.getElementById("infoText").innerHTML = 
     (targetTower.level < targetTower.maxLevel)?
     "Lvl: " + tower.level +" --> " + (tower.level+1) + "<br>" +
     "Dmg: " + tower.damage + " --> " + 
     towerData[tower.name]["damage"][tower.level] + "<br>" +
+    "Bonus Dmg: " + tower.bonus +
     "Range: " + tower.range/32 + " --> " +  
     towerData[tower.name]["range"][tower.level]/32 + "<br>" +
     "Atk Spd: " + tower.maxCd/20 + " --> " +  
     towerData[tower.name]["cd"][tower.level]/20 + "<br>" +
-    "Upgrade Cost: " + tower.bonus +
+    "Upgrade Cost: " + 
     towerData[tower.name]["cost"][tower.level] + "<br>" +
-    "<input type='button' value='upgrade' onclick='upgradeTower()'>"
+    "<input type='button' value='Upgrade' onclick='upgradeTower()'>" + 
+    "<br>" +
+    "<input type='button' value='Sell' onclick='sellTower()'>"
 
     : "Lvl: " + tower.level + "<br>" +
     "Dmg: " + tower.damage + "<br>" +
+    "Bonus Dmg: " + tower.bonus + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
     "Atk Spd: " + tower.maxCd/20 + "<br>" +
-    "Max lvl"
-}
+    "Max level"
+};
 
 //upgrading of tower
 function upgradeTower() {
@@ -314,6 +322,8 @@ function upgradeTower() {
         towerData[targetTower.name]["cost"][targetTower.level]
         targetTower.damage = 
         towerData[targetTower.name]["damage"][targetTower.level] 
+        targetTower.bonus = 
+        Math.round(castleData["attack"]/100*targetTower.damage)
         targetTower.level += 1       
 
         updateInfo(targetTower);
@@ -321,7 +331,16 @@ function upgradeTower() {
         error("Insufficient Cash!");
     }
 
-}
+};
+
+function sellTower() {
+    targetTower.bg.mouseEnabled = true
+    cash += towerData[targetTower.name]["cost"][targetTower.level-1]
+    document.getElementById("cash").innerHTML = "Cash: " + cash
+    stage.removeChild(targetTower)
+    towers.splice(0,1)
+    document.getElementById("infoText").innerHTML = ""    
+};
 
 /*#########################################################################
 
@@ -445,7 +464,8 @@ function tick(event) {
 
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
-        "Time = "+ time 
+        "Time = "+ time + "\n" +
+        towerType + towerName
 
     stage.update(event); // important!!
 };
@@ -613,14 +633,23 @@ function error(txt) {
 
 //toggle aoe
 function toggleAoe() {
+    if (aoeT.length == 0) {
+        towerName = false;
+        $(document).ready(function() {
+            $('.tower').removeClass('selected');
+        });        
+    }
     for (var i=0;i<aoeT.length;i++) {
         if (towerType) {
             stage.addChild(aoeT[i]);
         } else {
+            towerName = false;
+            $(document).ready(function() {
+                $('.tower').removeClass('selected');
+            });
             stage.removeChild(aoeT[i]);
         }
     }
-    stage.update();
 }
 
 // fast forward

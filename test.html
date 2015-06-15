@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>EaselJS demo: Mouse Events</title>
+	<link href="../_shared/demo.css" rel="stylesheet" type="text/css">
 	<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>
 	<script>
 		var stage, output;
@@ -9,9 +10,18 @@
 		function init() {
 			stage = new createjs.Stage("demoCanvas");
 			
-			output = new createjs.Text("","14px Arial");
+			// to get onMouseOver & onMouseOut events, we need to enable them on the stage:
+			stage.enableMouseOver();
+			
+			output = new createjs.Text("Test press, click, doubleclick, mouseover, and mouseout", "14px Arial");
 			output.x = output.y = 10;
 			stage.addChild(output);
+			
+			var circle = new createjs.Shape();
+			circle.graphics.beginFill("red").drawCircle(0, 0, 50);
+			circle.x = circle.y = 100;
+			circle.name = "circle";
+			stage.addChild(circle);
 			
 			var square = new createjs.Shape();
 			square.graphics.beginFill("green").drawRect(-50, -50, 100, 100);
@@ -19,31 +29,26 @@
 			square.y = 100;
 			square.name = "square";
 			stage.addChild(square);
-
-		    t1 = {
-		        images: ["images/icetower.png"],
-		        frames: {width:30, height:30, count:4},
-		        animations: {
-		            animate:[0,4]
-		        }
-		    }
-		    marioI = new createjs.SpriteSheet(t1);
-		    var monsterD = {}
-		    monsterD["t1"] = 
-		    {"images":marioI, "w":5}
-		    var tz = monsterD["t1"]
-		    mario = new createjs.Sprite(tz["images"]);
-		    mario.x = tz["w"]
-		    mario.y = 50
-		    mario.gotoAndPlay("animate")
-		    stage.addChild(mario)
-
-		    var testing = stage.getChildAt(2)
+			
+			// add a handler for all the events we're interested in:
+			circle.on("click", handleMouseEvent);
+			circle.on("dblclick", handleMouseEvent);
+			circle.on("mouseover", handleMouseEvent);
+			circle.on("mouseout", handleMouseEvent);
+			                                                                                                                   
+			square.on("click", handleMouseEvent);
+			square.on("dblclick", handleMouseEvent);
+			square.on("mouseover", handleMouseEvent);
+			square.on("mouseout", handleMouseEvent);
 			
 			stage.update();
-
-			output.text = testing
-			
+		}
+		
+		function handleMouseEvent(evt) {
+			output.text = "evt.target: "+evt.target+", evt.type: "+evt.type;
+			if (evt.type == "click") {
+				evt.target.mouseEnabled = false
+			}
 			// to save CPU, we're only updating when we need to, instead of on a tick:1
 			stage.update();
 		}
