@@ -1,62 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>EaselJS demo: Mouse Events</title>
+	<title>EaselJS demo: Mouse Events on Stage</title>
 	<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>
 	<script>
-		var stage, output;
+		var stage, label, shape, oldX, oldY, size, color;
 		
 		function init() {
 			stage = new createjs.Stage("demoCanvas");
+			stage.enableDOMEvents(true);
+			label = new createjs.Text("finger paint", "24px Arial");
+			label.x = label.y = 10;
 			
-			// to get onMouseOver & onMouseOut events, we need to enable them on the stage:
-			stage.enableMouseOver();
+			shape = new createjs.Shape();
+			stage.addChild(shape, label);
 			
-			output = new createjs.Text("Test press, click, doubleclick, mouseover, and mouseout", "14px Arial");
-			output.x = output.y = 10;
-			stage.addChild(output);
+			// set up our defaults:
+			color = "#0FF";
+			size = 2;
 			
-			var circle = new createjs.Shape();
-			circle.graphics.beginFill("red").drawCircle(0, 0, 50);
-			circle.x = circle.y = 100;
-			circle.name = "circle";
-			stage.addChild(circle);
+			// add handler for stage mouse events:
+			stage.on("stagemousedown", function(event) {
+				size = 10;
+			})                
 			
-			var square = new createjs.Shape();
-			square.graphics.beginFill("green").drawRect(-50, -50, 100, 100);
-			square.x = 250;
-			square.y = 100;
-			square.name = "square";
-			//stage.addChild(square);
+			stage.on("stagemouseup", function(event) {
+				color = createjs.Graphics.getHSL(Math.random()*360, 100, 50);
+				size = 2;
+			})
+			 
 			
-			// add a handler for all the events we're interested in:
-			circle.on("click", handleMouseEvent);
-			circle.on("dblclick", handleMouseEvent);
-			circle.on("mouseover", handleMouseEvent);
-			circle.on("mouseout", handleMouseEvent);
-			                                                                                                                   
-			square.on("click", handleMouseEvent);
-			square.on("dblclick", handleMouseEvent);
-			square.on("mouseover", handleMouseEvent);
-			square.on("mouseout", handleMouseEvent);
-			var test = new createjs.Shape();
-            test.graphics.beginFill("#f00").drawRect(0,
-                0,32,32)	
-            var test1 = new createjs.Container();
-
-
-            test1.addChild(test,square)
-            stage.addChild(test1)
-            test1.removeChild(test)		
-			stage.update();
-		}
-		
-		function handleMouseEvent(evt) {
-			output.text = "evt.target: "+evt.target+", evt.type: "+evt.type;
-			if (evt.type == "click") {
-
-			}
-			// to save CPU, we're only updating when we need to, instead of on a tick:1
+		    stage.on("stagemousemove",function(evt) {
+				if (oldX) {
+					shape.graphics.beginStroke(color)
+								  .setStrokeStyle(size, "round")
+								  .moveTo(oldX, oldY)
+								  .lineTo(evt.stageX, evt.stageY);
+					stage.update();
+				}
+				oldX = evt.stageX;
+				oldY = evt.stageY;
+			})
+			
 			stage.update();
 		}
 	</script>

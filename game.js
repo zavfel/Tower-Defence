@@ -23,7 +23,7 @@ checkGG, ffCount, ffCounter, errorCD, nticks=0, test1
                 Game Data
 
 #########################################################################*/
-castleData = {"hp":100,"armor":0,"attack":10,"regen":0}
+castleData = {"hp":100,"armor":0,"attack":0,"regen":0}
 monsterData = {} //types of monsters
 monsters = [] //monsters on map
 towerData = {} //types of towers
@@ -50,8 +50,24 @@ coordinates = [
 [672, 224],
 [384, 224]
 ];
+//grid variables
 var targetGrid = new createjs.Shape();
 targetGrid.graphics.beginStroke("#fff").drawRect(0,0,32,32);
+var t1i = new createjs.Bitmap("images/light_tower.png");
+var t1a = new createjs.Shape();
+t1a.graphics.beginStroke("#000").drawCircle(16,16,112);
+t1a.alpha = .5;
+var t1 = new createjs.Container();
+t1.addChild(t1i,t1a);
+var t2i = new createjs.Bitmap("images/ice_tower.png");
+var t2a = new createjs.Shape();
+t2a.graphics.beginStroke("#000").drawCircle(16,16,112);
+t2a.alpha = .5;
+var t2 = new createjs.Container();
+t2.addChild(t2i,t2a);
+var hoverTower = {"lightTower": t1, "iceTower":t2}
+var hoverGrid = false
+var hoverT = false
 
 /*#########################################################################
 
@@ -220,12 +236,29 @@ function buyTower(type) {
 //building tower onto canvas
 function buildTower(event) {
     event.target.alpha = (event.type == "mouseover") ? .3 : 0.01;
+    //show tower image when over grid
+    if (towerName) {
+        if (event.type == "mouseover") {
+            if (event.target !== hoverGrid) {
+                hoverGrid = event.target
+                hoverT = hoverTower[towerName]
+                hoverT.x = event.target.coord[0]
+                hoverT.y = event.target.coord[1]
+                stage.addChild(hoverT)
+                stage.addChild(hoverGrid)
+            }
+        } else {
+            stage.removeChild(hoverT)
+        }  
+    }
+    //buying of tower
     if (event.type == "click") {
         if (towerType) {
             if (towerType["cost"][0]<=cash) {
                 $(document).ready(function() {
                     $('.towerBtn').removeClass('selected');
                 });
+                stage.removeChild(hoverT);
                 event.target.mouseEnabled = false;
                 var newImage = new createjs.Bitmap(towerType["image"]);
                 var newTower = new createjs.Container();
