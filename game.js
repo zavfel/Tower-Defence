@@ -255,7 +255,7 @@ function buildTower(event) {
     if (event.type == "click") {
         if (towerType) {
             if (towerType["cost"][0]<=cash) {
-                $(document).ready(function() {
+                $(function() {
                     $('.towerBtn').removeClass('selected');
                 });
                 stage.removeChild(hoverT);
@@ -312,7 +312,7 @@ function buildTower(event) {
 //handle tower info & upgrades
 function handleInfo(event) {
     if (event.type=="click") {
-        $(document).ready(function() {
+        $(function() {
             $('.towerBtn').removeClass('selected');
         });
         towerType = false;
@@ -747,7 +747,7 @@ function toggleAoe() {
     if (towers.length == 0) {
         towerType = false;
         towerName = false;
-        $(document).ready(function() {
+        $(function() {
             $('.towerBtn').removeClass('selected');
         });        
     } else {
@@ -757,7 +757,7 @@ function toggleAoe() {
                     towers[i].addChild(towers[i].aoe);
                 } else {
                     towerName = false;
-                    $(document).ready(function() {
+                    $(function() {
                         $('.towerBtn').removeClass('selected');
                     });
                     towers[i].removeChild(towers[i].aoe);
