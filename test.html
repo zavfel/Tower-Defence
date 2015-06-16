@@ -1,29 +1,54 @@
-
-<div id="status">
-	<p id="cash" class="gameInfo">Cash: </p>
-	<p id="wave" class="gameInfo">Wave: </p>
-	<div>
-		<p class="titles">Castle Info</p>
-		<p id="health" class="gameInfo">Health: </p>
-		<p id="castleText" class="gameInfo"></p>
-	</div>
-	<input type="button" value="start" id="pauseBtn" onclick="togglePause()"></input><br></br>
-	<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"></input><br></br>
-	<input type="button" value="1x" id="ffBtn" onclick="ff()"></input><br></br>
-	<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"></input><br></br>
-	<input type="button" value="restart" id="restartBtn" onclick="restart()"></input><br></br>
-	<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
-		<img src="images/light_tower.png" class="tower"> </img>
-		<p class="towerName">Light Tower</p>
-	</button>			
-	<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
-		<img src="images/ice_tower.png" class="tower"> </img>
-		<p class="towerName">Ice Tower</p>
-	</button>
-
-	<div> 
-		<p class="titles">Tower Info</p>
-		<p id="infoText"></p>
-		<p id="errorText"></p>
-	</div>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EaselJS demo: Mouse Events on Stage</title>
+	<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>
+	<script>
+		var stage, label, shape, oldX, oldY, size, color;
+		
+		function init() {
+			stage = new createjs.Stage("demoCanvas");
+			stage.enableDOMEvents(true);
+			label = new createjs.Text("finger paint", "24px Arial");
+			label.x = label.y = 10;
+			
+			shape = new createjs.Shape();
+			stage.addChild(shape, label);
+			
+			// set up our defaults:
+			color = "#0FF";
+			size = 2;
+			
+			// add handler for stage mouse events:
+			stage.on("stagemousedown", function(event) {
+				size = 10;
+			})                
+			
+			stage.on("stagemouseup", function(event) {
+				color = createjs.Graphics.getHSL(Math.random()*360, 100, 50);
+				size = 2;
+			})
+			 
+			
+		    stage.on("stagemousemove",function(evt) {
+				if (oldX) {
+					shape.graphics.beginStroke(color)
+								  .setStrokeStyle(size, "round")
+								  .moveTo(oldX, oldY)
+								  .lineTo(evt.stageX, evt.stageY);
+					stage.update();
+				}
+				oldX = evt.stageX;
+				oldY = evt.stageY;
+			})
+			
+			stage.update();
+		}
+	</script>
+</head>
+<body onload="init();">
+	<canvas id="demoCanvas" width="500" height="200">
+		alternate content
+	</canvas>
+</body>
+</html>

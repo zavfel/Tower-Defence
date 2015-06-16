@@ -8,46 +8,50 @@
 	<script src="easeljs-0.7.0.min.js"></script>
 	<!--online-->
 	<!--<script src="http://code.createjs.com/easeljs-0.7.0.min.js"></script>-->
-	<script src="game.js"> </script>	
+	<script src="game.js"> </script>
 	<script>
 	$(document).ready(function() {
 		$('.towerBtn').click(
 			function(){
 			$('.towerBtn').removeClass('selected');
 			$(this).addClass('selected');
-		});
+		})
 	})
 	</script>
+
 </head>
 <body onload="init()">
-	<div id="status">
-		<p id="cash" class="gameInfo">Cash: </p>
-		<p id="wave" class="gameInfo">Wave: </p>
-		<div>
-			<p class="titles">Castle Info</p>
-			<p id="health" class="gameInfo">Health: </p>
-			<p id="castleText" class="gameInfo"></p>
-		</div>
-		<input type="button" value="start" id="pauseBtn" onclick="togglePause()"></input><br></br>
-		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"></input><br></br>
-		<input type="button" value="1x" id="ffBtn" onclick="ff()"></input><br></br>
-		<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"></input><br></br>
-		<input type="button" value="restart" id="restartBtn" onclick="restart()"></input><br></br>
-		<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
-			<img src="images/light_tower.png" class="tower"> </img>
-			<p class="towerName">Light Tower</p>
-		</button>			
-		<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
-			<img src="images/ice_tower.png" class="tower"> </img>
-			<p class="towerName">Ice Tower</p>
-		</button>
+	<div id="sidebar">
+		<div id="status">
+			<p id="cash" class="gameInfo">Cash: </p>
+			<p id="wave" class="gameInfo">Wave: </p>
+			<div>
+				<p class="titles">Castle Info</p>
+				<p id="health" class="gameInfo">Health: </p>
+				<p id="castleText" class="gameInfo"></p>
+			</div>
+			<input type="button" value="start" id="pauseBtn" onclick="togglePause()"><br>
+			<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"><br>
+			<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
+			<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
+			<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
+			<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
+				<img src="images/light_tower.png" class="tower">
+				<p class="towerName">Light Tower</p>
+			</button>			
+			<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
+				<img src="images/ice_tower.png" class="tower">
+				<p class="towerName">Ice Tower</p>
+			</button>
 
-		<div> 
-			<p class="titles">Tower Info</p>
-			<p id="infoText"></p>
-			<p id="errorText"></p>
+			<div> 
+				<p class="titles">Tower Info</p>
+				<p id="infoText"></p>
+				<p id="errorText"></p>
+			</div>
 		</div>
 	</div>
+	<div id="game">
 		<canvas id="playingField" width="896" height="544"> <!--896/544-->
 		alternate content
 		</canvas>

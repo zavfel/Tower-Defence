@@ -16,7 +16,7 @@ heroI, lightTowerI, iceTowerI, //tower images
 healthbarI, healthbar, marioI, warriorI, //monster images
 towerData, towers, towerType, towerName, targetTower, towerNum,//tower variables
 monsterData, monsters, //monster variables
-checkGG, ffCount, ffCounter, errorCD, test1
+checkGG, ffCount, ffCounter, errorCD, nticks=0, test1
 
 /*#########################################################################
 
@@ -479,6 +479,7 @@ function tick(event) {
     errorTextcd();
 
     if (!createjs.Ticker.getPaused()) {
+        nticks++
 
         monsterEffect();//controls effect on monster
         towerAttacks();//check for tower attack
