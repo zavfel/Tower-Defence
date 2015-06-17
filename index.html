@@ -21,34 +21,32 @@
 
 </head>
 <body onload="init()">
-	<div id="sidebar">
-		<div id="status">
-			<p id="cash" class="gameInfo">Cash: </p>
-			<p id="wave" class="gameInfo">Wave: </p>
-			<div>
-				<p class="titles">Castle Info</p>
-				<p id="health" class="gameInfo">Health: </p>
-				<p id="castleText" class="gameInfo"></p>
-			</div>
-			<input type="button" value="start" id="pauseBtn" onclick="togglePause()"><br>
-			<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"><br>
-			<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
-			<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
-			<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
-			<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
-				<img src="images/light_tower.png" class="tower">
-				<p class="towerName">Light Tower</p>
-			</button>			
-			<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
-				<img src="images/ice_tower.png" class="tower">
-				<p class="towerName">Ice Tower</p>
-			</button>
+	<div id="gameStatus">
+		<p id="cash" class="gameInfo">Cash: </p>
+		<p id="wave" class="gameInfo">Wave: </p>
+		<div>
+			<p class="titles">Castle Info</p>
+			<p id="health" class="gameInfo">Health: </p>
+			<p id="castleText" class="gameInfo"></p>
+		</div>
+		<input type="button" value="start" id="pauseBtn" onclick="togglePause()"><br>
+		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"><br>
+		<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
+		<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
+		<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
+		<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
+			<img src="images/light_tower.png" class="tower">
+			<p class="towerName">Light Tower</p>
+		</button>			
+		<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
+			<img src="images/ice_tower.png" class="tower">
+			<p class="towerName">Ice Tower</p>
+		</button>
 
-			<div> 
-				<p class="titles">Tower Info</p>
-				<p id="infoText"></p>
-				<p id="errorText"></p>
-			</div>
+		<div> 
+			<p class="titles">Tower Info</p>
+			<p id="infoText"></p>
+			<p id="errorText"></p>
 		</div>
 	</div>
 	<div id="game">
