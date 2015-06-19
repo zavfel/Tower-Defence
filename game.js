@@ -9,14 +9,16 @@
 -Game Grids*/
 
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
-output, cash, health, coordinates, time, castleData, wave, //game data
+output, cash, score, health, coordinates, time, castleData, wave, //game data
 s1, s2,//monster sprites
 backgroundI, background, castleI, castle, //canvas images & variable
 heroI, lightTowerI, iceTowerI, //tower images
 healthbarI, healthbar, marioI, warriorI, //monster images
 towerData, towers, towerType, towerName, targetTower, towerNum,//tower variables
 monsterData, monsters, //monster variables
-checkGG, ffCount, ffCounter, errorCD, nticks=0, test1
+t1, t1i, t1a, t2, t2i, t2a, hoverTower, hoverGrid, hoverT,
+checkGG, ffCount, ffCounter, errorCD, countDown, pScreen,
+test1
 
 /*#########################################################################
 
@@ -32,13 +34,17 @@ towers = []   //towers currently on map
 targetTower = false //selected tower on map
 towerType = false //selected tower to buy
 towerName = false 
-cash = 50;
+hoverGrid = false //identify current grid
+hoverT = false //image of tower selected to buy
+cash = 40;
 health = 10;
 wave = 1;
+score = 0;
 checkGG = 0;
 ffCount = [20,40,80]
 ffCounter = 1
 errorCD = 0
+countDown = 260
 coordinates = [
 [96, 0],
 [96, 480],
@@ -50,24 +56,50 @@ coordinates = [
 [672, 224],
 [384, 224]
 ];
+//paused screen
+function pauseScreen() {
+    var shade = new createjs.Shape();
+    shade.graphics.beginFill("#d3d3d3").drawRect(0, 0,
+        stage.canvas.width,stage.canvas.height);
+    shade.alpha = .85
+
+    var label = new createjs.Text("GAME PAUSED", "bold 40px Arial", "#FFFFFF");
+    label.textAlign = "center";
+    label.x = stage.canvas.width/2;
+    label.y = stage.canvas.height/2;
+
+    pScreen = new createjs.Container();
+
+    pScreen.addChild(shade, label);
+}
+
+
 //grid variables
+//highlight grid when tower is selected
 var targetGrid = new createjs.Shape();
 targetGrid.graphics.beginStroke("#fff").drawRect(0,0,32,32);
-var t1i = new createjs.Bitmap("images/light_tower.png");
-var t1a = new createjs.Shape();
-t1a.graphics.beginStroke("#000").drawCircle(16,16,112);
-t1a.alpha = .5;
-var t1 = new createjs.Container();
-t1.addChild(t1i,t1a);
-var t2i = new createjs.Bitmap("images/ice_tower.png");
-var t2a = new createjs.Shape();
-t2a.graphics.beginStroke("#000").drawCircle(16,16,112);
-t2a.alpha = .5;
-var t2 = new createjs.Container();
-t2.addChild(t2i,t2a);
-var hoverTower = {"lightTower": t1, "iceTower":t2}
-var hoverGrid = false
-var hoverT = false
+
+//show tower image when hover over grid
+function gridData() {
+    t1i = new createjs.Bitmap("images/light_tower.png");
+    t1a = new createjs.Shape();
+    t1a.graphics.beginStroke("#000").drawCircle(16,16,
+        towerData["lightTower"]["range"][0]);
+    t1a.alpha = .5;
+    t1 = new createjs.Container();
+    t1.addChild(t1i,t1a);
+
+    t2i = new createjs.Bitmap("images/ice_tower.png");
+    t2a = new createjs.Shape();
+    t2a.graphics.beginStroke("#000").drawCircle(16,16,
+        towerData["iceTower"]["range"][0]);
+    t2a.alpha = .5;
+    t2 = new createjs.Container();
+    t2.addChild(t2i,t2a);
+
+    hoverTower = {"lightTower": t1, "iceTower":t2}
+
+}
 
 /*#########################################################################
 
@@ -79,15 +111,17 @@ function init() {
     stage = new createjs.Stage("playingField");
     stage.enableMouseOver();
 
+    pauseScreen(); //load pause screen in canvas
     imageload(); //load image into canvas
     grid(); //load grid onto map
     addTower(); //creates tower data
+    gridData(); //adds grid data into canvas
     addMonster(); //creates monster data
     //line of creep path
     //path();
 
     //add first wave of monster
-    cMonster("mario",2)
+    cMonster("mario",10)
 
     //edit UI
     document.getElementById("pauseBtn").value = "start";
@@ -96,9 +130,11 @@ function init() {
     "Atk Bonus: " + castleData["attack"] + "%" +"<br>" +
     "Regen: " + castleData["regen"]
 
+    document.getElementById("score").innerHTML += score; 
     document.getElementById("cash").innerHTML += cash;
-    document.getElementById("health").innerHTML += health;
     document.getElementById("wave").innerHTML += wave; 
+    document.getElementById("health").innerHTML += health;
+    document.getElementById("cdTimer").innerHTML = (countDown/20);
 
     /*var test = new createjs.Bitmap(canonI)
     test.x=48
@@ -207,13 +243,13 @@ function addTower() {
     towerData["lightTower"] =
     {"image":lightTowerI, "type":"Single", "splashArea":[false],
     "effect":false,
-    "range":[112,112], "cost":[10,25], "cd":[20,20], "damage":[5,10]}
+    "range":[96,96,112,112], "cost":[15,30,50,80], "cd":[20,15,10,10], "damage":[5,10,20,30]}
 
     //ice tower
     towerData["iceTower"] =
-    {"image":iceTowerI, "type":"Splash", "splashArea":[32], 
-    "effect":true, "slow":[2], "slowDuration":20,
-    "range":[112], "cost":[15], "cd":[20], "damage":[2]}
+    {"image":iceTowerI, "type":"Splash", "splashArea":[16,16,32,48], 
+    "effect":true, "slow":[.25,.4,.5,.7], "slowDuration":[20,20,25,25],
+    "range":[80,80,96,96], "cost":[20,45,70,150], "cd":[20,20,20,15], "damage":[5,10,15,20]}
 }
 
 
@@ -249,6 +285,7 @@ function buildTower(event) {
             }
         } else {
             stage.removeChild(hoverT)
+            hoverGrid = false
         }  
     }
     //buying of tower
@@ -276,6 +313,7 @@ function buildTower(event) {
                 Math.round(castleData["attack"]/100*newTower.damage);
                 newTower.effect = towerType["effect"];
                 newTower.cost = towerType["cost"][1];
+                newTower.sell = towerType["cost"][0];
                 newTower.x = event.target.coord[0];
                 newTower.y = event.target.coord[1];
                 newTower.coord = event.target.coord
@@ -283,7 +321,7 @@ function buildTower(event) {
                 newTower.splashArea = towerType["splashArea"][0];
                 if (towerName == "iceTower") {
                     newTower.slow = towerType["slow"][0];
-                    newTower.slowDuration = towerType["slowDuration"];
+                    newTower.slowDuration = towerType["slowDuration"][0];
                 }
                 //aoe of tower range
                 var aoeS = new createjs.Shape();
@@ -329,7 +367,12 @@ function handleInfo(event) {
 
 //update tower info
 function updateInfo(tower) {
-    var nextlvl = tower.level + 1
+    var effect = ""
+
+    if (tower.name=="iceTower") {
+        effect = "Slow: " + (tower.slow*100) + "%" + " --> " +  
+        (towerData[tower.name]["slow"][tower.level]*100) + "%" + "<br>"
+    }
     //tower info
     document.getElementById("infoText").innerHTML = 
     (targetTower.level < targetTower.maxLevel)?
@@ -341,19 +384,21 @@ function updateInfo(tower) {
     towerData[tower.name]["range"][tower.level]/32 + "<br>" +
     "Atk Spd: " + tower.maxCd/20 + " --> " +  
     towerData[tower.name]["cd"][tower.level]/20 + "<br>" +
-    "Upgrade Cost: " + 
-    towerData[tower.name]["cost"][tower.level] + "<br>" +
+    effect +
     "<input type='button' value='Upgrade' onclick='upgradeTower()'>" + 
-    "<br>" +
-    "<input type='button' value='Sell' onclick='sellTower()'>"
+    towerData[tower.name]["cost"][tower.level] + "<br>" +
+    "<input type='button' value='Sell' onclick='sellTower()'>" +
+    Math.ceil(tower.sell/2)
 
     : "Lvl: " + tower.level + "<br>" +
     "Dmg: " + tower.damage + "<br>" +
     "Bonus Dmg: " + tower.bonus + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
     "Atk Spd: " + tower.maxCd/20 + "<br>" +
+    effect +
     "Max level" + "<br>" +
-    "<input type='button' value='Sell' onclick='sellTower()'>"
+    "<input type='button' value='Sell' onclick='sellTower()'>" +
+    Math.ceil(tower.sell/2)
 };
 
 //upgrading of tower
@@ -361,12 +406,23 @@ function upgradeTower() {
     if (targetTower.cost<=cash) {
         cash-=targetTower.cost
         document.getElementById("cash").innerHTML = "Cash: " + cash
-        targetTower.cost = 
-        towerData[targetTower.name]["cost"][targetTower.level]
+        if (targetTower.name == 'iceTower') {
+            targetTower.slow = 
+            towerData[targetTower.name]["slow"][targetTower.level]
+            targetTower.slowDuration = 
+            towerData[targetTower.name]["slowDuration"][targetTower.level]
+        }
+        targetTower.sell += targetTower.cost
         targetTower.damage = 
         towerData[targetTower.name]["damage"][targetTower.level] 
         targetTower.bonus = 
         Math.round(castleData["attack"]/100*targetTower.damage)
+        targetTower.range = 
+        towerData[targetTower.name]["range"][targetTower.level] 
+        targetTower.maxCd = 
+        towerData[targetTower.name]["cd"][targetTower.level] 
+        targetTower.cost = 
+        towerData[targetTower.name]["cost"][targetTower.level]
         targetTower.level += 1       
 
         updateInfo(targetTower);
@@ -378,8 +434,10 @@ function upgradeTower() {
 
 function sellTower() {
     targetTower.bg.mouseEnabled = true
-    cash += towerData[targetTower.name]["cost"][targetTower.level-1]
+    cash += Math.ceil(targetTower.sell/2)
+    score -= 10
     document.getElementById("cash").innerHTML = "Cash: " + cash
+    document.getElementById("score").innerHTML = "Score: " + score
     document.getElementById("infoText").innerHTML = ""
     stage.removeChild(targetGrid)
     stage.removeChild(targetTower)
@@ -397,12 +455,12 @@ function addMonster() {
     //mario
     monsterData["mario"] =
     {"image":marioI, "w": 21, "h": 40, 
-    "speed":4, "hp":10, "bounty":2, "damage":1}
+    "speed":3, "hp":10, "bounty":2, "damage":1}
 
     //warrior
     monsterData["warrior"] =
     {"image":warriorI, "w": 24, "h": 31, 
-    "speed":6, "hp":5, "bounty":2, "damage":1}
+    "speed":6, "hp":6, "bounty":2, "damage":1}
 }
 
 
@@ -479,7 +537,8 @@ function tick(event) {
     errorTextcd();
 
     if (!createjs.Ticker.getPaused()) {
-        nticks++
+        timer();//countdown of next wave
+
 
         monsterEffect();//controls effect on monster
         towerAttacks();//check for tower attack
@@ -499,12 +558,12 @@ function tick(event) {
 
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
-        "Time = "+ time + test1 + "\n" +
-        towerType + towerName
+        "Time = "+ time + test1 + "\n" 
 
     stage.update(event); // important!!
 };
 
+//to show any error to player
 function errorTextcd() {
     if (errorCD) {
         if (errorCD==1) {
@@ -514,12 +573,22 @@ function errorTextcd() {
     }    
 }
 
+//timer for next wave
+function timer() {
+    if (countDown==0) {
+        nextWave();
+    } else {
+        countDown--;
+        document.getElementById("cdTimer").innerHTML = Math.round(countDown/2)/10;
+    }
+}
+
 //monster path
 function monsterMovement() {
     for (var i=0;i<monsters.length;i++) {
         var mob = monsters[i]
 
-        //line 1
+        //section 1
         if (mob.y<=coordinates[1][1]-mob.h/2 &&
             mob.x<=coordinates[1][0]) {
             mob.y+=mob.speed;
@@ -528,7 +597,7 @@ function monsterMovement() {
                 mob.pos[2]++;
             }
         }
-        //line 2
+        //section 2
         else if (mob.x<=coordinates[2][0]-mob.w/2 &&
             mob.y>=coordinates[2][1]-mob.h/2) {
             mob.x+=mob.speed;
@@ -540,7 +609,7 @@ function monsterMovement() {
                 mob.pos[1]++;
             }
         }
-        //line 3
+        //section 3
         else if (mob.y>=coordinates[3][1]-mob.h/2 &&
             mob.x>=coordinates[3][0]-mob.w/2) {
             mob.y-=mob.speed;
@@ -552,7 +621,7 @@ function monsterMovement() {
                 mob.pos[0]++;
             }
         }
-        //line 4
+        //section 4
         else if (mob.x>=coordinates[4][0]-mob.w/2 &&
             mob.y<=coordinates[4][1]-mob.h/2) {
             mob.x-=mob.speed;
@@ -564,7 +633,7 @@ function monsterMovement() {
                 mob.pos[3]++;
             }
         }
-        //line 5
+        //section 5
         else if (mob.y<=coordinates[5][1]-mob.h/2 &&
             mob.x<=coordinates[5][0]-mob.w/2) {
             mob.y+=mob.speed;
@@ -576,7 +645,7 @@ function monsterMovement() {
                 mob.pos[2]++;
             }
         }
-        //line 6
+        //section 6
         else if (mob.x<=coordinates[6][0]-mob.w/2 &&
             mob.y>=coordinates[6][1]-mob.h/2) {
             mob.x+=mob.speed;
@@ -588,7 +657,7 @@ function monsterMovement() {
                 mob.pos[1]++;
             }
         }
-        //line 7
+        //section 7
         else if (mob.y>=coordinates[7][1]-mob.h/2) {
             mob.y-=mob.speed;
             if (mob.pos[0]==0) {
@@ -599,7 +668,7 @@ function monsterMovement() {
                 mob.pos[0]++;
             }
         }
-        //line 8
+        //section 8
         else if (mob.x>=coordinates[8][0]-mob.w) {
             mob.x-=mob.speed;
             if (mob.pos[3]==0) {
@@ -610,7 +679,7 @@ function monsterMovement() {
                 mob.pos[3]++;
             }
         }
-        //monster attacks
+        //monster attacks castle
         else { 
             if (!mob.dead) {
                 health-=mob.dmg-castleData["armor"];
@@ -661,9 +730,12 @@ function towerAttacks() {
                             if (monsters[j].currentHp<=0) {
                                 stage.removeChild(monsters[j]);
                                 cash+=monsters[j].bounty;
+                                score+=monsters[j].bounty;
                                 monsters.splice(j,1);
-                                document.getElementById("cash").innerHTML="cash: "+
+                                document.getElementById("cash").innerHTML="Cash: "+
                                 cash;
+                                document.getElementById("score").innerHTML="Score: "+
+                                score;
                             }
                             break;
                         }
@@ -705,10 +777,10 @@ function splashDmg(tower,mon,effect) {
                 .currentHp/monsters[i].maxHp*monsters[i].w,3);
             if (effect && monsters[i].cd==0) {
                 if (tower.name == "iceTower") {
-                    if (monsters[i].speed<=tower.slow) {
-                        monsters[i].speed = 1
+                    if (monsters[i].speed*(1-tower.slow)<=.5) {
+                        monsters[i].speed = .5
                     } else {
-                        monsters[i].speed-=tower.slow
+                        monsters[i].speed *= (1-tower.slow)
                     }
                     monsters[i].cd = tower.slowDuration
                 }
@@ -724,9 +796,12 @@ function splashDmg(tower,mon,effect) {
     for (var i=0;i<monsterDead.length;i++) {
         stage.removeChild(monsters[monsterDead[i]]);
         cash+=monsters[monsterDead[i]].bounty;
+        score+=monsters[monsterDead[i]].bounty;
         monsters.splice(monsterDead[i],1);
-        document.getElementById("cash").innerHTML="cash: "+
+        document.getElementById("cash").innerHTML="Cash: "+
         cash;        
+        document.getElementById("score").innerHTML="Score: "+
+        score;        
     }
     tower.cd=tower.maxCd;
 }
@@ -792,15 +867,22 @@ function ff() {
 function nextWave() {
     if (!createjs.Ticker.getPaused()) {
         wave++;
+        countDown = 260;
         document.getElementById("wave").innerHTML = "Wave: " + wave;
-        if (wave%10==0) {
+        if (wave%10 ==0) {
+            monsterData["mario"]["bounty"]+=1
+            monsterData["warrior"]["bounty"]+=1
+
+            monsterData["mario"]["damage"]+=1
+            monsterData["warrior"]["damage"]+=1
         }
-        if (wave%2!=0) {
-            monsterData["mario"]["hp"]+=1
-            cMonster("mario",2);
-        } else {
-            monsterData["warrior"]["hp"]+=1
-            cMonster("warrior",2);
+        if (wave%3 != 0) {
+            monsterData["mario"]["hp"]*=1.5
+            cMonster("mario",10)
+        }
+        else {
+            cMonster("warrior",10);
+            monsterData["warrior"]["hp"]*=1.5
         }
     }
 }
@@ -809,7 +891,14 @@ function nextWave() {
 function togglePause() {
     var paused = createjs.Ticker.getPaused();
     createjs.Ticker.setPaused(!paused);
+    if (!paused) {
+        stage.addChild(pScreen);
+    } else {
+        stage.removeChild(pScreen);
+    }
     document.getElementById("pauseBtn").value = !paused ? "play" : "pause";
+
+    //stop animation when paused
     for (var i=0;i<monsters.length;i++) {
         for (var j=0;j<4;j++) {
             if (!paused) {

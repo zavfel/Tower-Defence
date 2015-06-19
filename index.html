@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Tower Defense(beta)</title>
+	<title>Tower Defense(test)</title>
 	<link href="gameStyle.css" rel="stylesheet" type="text/css">
 	<script src="jquery-1.11.3.min.js"></script>
 	<!--offline-->
@@ -22,15 +22,19 @@
 </head>
 <body onload="init()">
 	<div id="gameStatus">
+		<p id="score" class="gameInfo">Score: </p>
 		<p id="cash" class="gameInfo">Cash: </p>
 		<p id="wave" class="gameInfo">Wave: </p>
 		<div>
 			<p class="titles">Castle Info</p>
 			<p id="health" class="gameInfo">Health: </p>
 			<p id="castleText" class="gameInfo"></p>
+		</div>		
+		<div class="gameInfo"> Next wave:<span id="cdTimer" class="gameInfo"></span>s
 		</div>
-		<input type="button" value="start" id="pauseBtn" onclick="togglePause()"><br>
-		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()"><br>
+		<input type="button" value="start" id="pauseBtn" onclick="togglePause()">
+		<br>
+		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()">
 		<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
 		<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
 		<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
