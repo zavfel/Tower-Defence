@@ -10,14 +10,16 @@
 
 var stage, hitsT, hit0, hit1, hit2, hit3, hit4, hit5, hit6, hit7, hit8, hit9,
 output, cash, score, health, coordinates, time, castleData, wave, //game data
-s1, s2,//monster sprites
+s1, s2, s3,//monster sprites
 backgroundI, background, castleI, castle, //canvas images & variable
 heroI, lightTowerI, iceTowerI, //tower images
-healthbarI, healthbar, marioI, warriorI, //monster images
+itS, ice, ltS, light,
+healthbarI, healthbar, marioI, warriorI, armoredI,//monster images
 towerData, towers, towerType, towerName, targetTower, towerNum,//tower variables
 monsterData, monsters, //monster variables
+shots, //shots variables
 t1, t1i, t1a, t2, t2i, t2a, hoverTower, hoverGrid, hoverT,
-checkGG, ffCount, ffCounter, errorCD, countDown, pScreen,
+checkGG, ffCount, ffCounter, errorCD, countDown, lastMon, pScreen,
 test1
 
 /*#########################################################################
@@ -28,6 +30,7 @@ test1
 castleData = {"hp":100,"armor":0,"attack":0,"regen":0}
 monsterData = {} //types of monsters
 monsters = [] //monsters on map
+shots = [] //shots on map
 towerData = {} //types of towers
 towerNum = 0 //index of tower being built
 towers = []   //towers currently on map
@@ -38,13 +41,14 @@ hoverGrid = false //identify current grid
 hoverT = false //image of tower selected to buy
 cash = 40;
 health = 10;
-wave = 1;
+wave = 0;
 score = 0;
 checkGG = 0;
 ffCount = [20,40,80]
 ffCounter = 1
 errorCD = 0
-countDown = 260
+countDown = 0
+lastMon = false
 coordinates = [
 [96, 0],
 [96, 480],
@@ -56,50 +60,8 @@ coordinates = [
 [672, 224],
 [384, 224]
 ];
-//paused screen
-function pauseScreen() {
-    var shade = new createjs.Shape();
-    shade.graphics.beginFill("#d3d3d3").drawRect(0, 0,
-        stage.canvas.width,stage.canvas.height);
-    shade.alpha = .85
-
-    var label = new createjs.Text("GAME PAUSED", "bold 40px Arial", "#FFFFFF");
-    label.textAlign = "center";
-    label.x = stage.canvas.width/2;
-    label.y = stage.canvas.height/2;
-
-    pScreen = new createjs.Container();
-
-    pScreen.addChild(shade, label);
-}
 
 
-//grid variables
-//highlight grid when tower is selected
-var targetGrid = new createjs.Shape();
-targetGrid.graphics.beginStroke("#fff").drawRect(0,0,32,32);
-
-//show tower image when hover over grid
-function gridData() {
-    t1i = new createjs.Bitmap("images/light_tower.png");
-    t1a = new createjs.Shape();
-    t1a.graphics.beginStroke("#000").drawCircle(16,16,
-        towerData["lightTower"]["range"][0]);
-    t1a.alpha = .5;
-    t1 = new createjs.Container();
-    t1.addChild(t1i,t1a);
-
-    t2i = new createjs.Bitmap("images/ice_tower.png");
-    t2a = new createjs.Shape();
-    t2a.graphics.beginStroke("#000").drawCircle(16,16,
-        towerData["iceTower"]["range"][0]);
-    t2a.alpha = .5;
-    t2 = new createjs.Container();
-    t2.addChild(t2i,t2a);
-
-    hoverTower = {"lightTower": t1, "iceTower":t2}
-
-}
 
 /*#########################################################################
 
@@ -121,7 +83,7 @@ function init() {
     //path();
 
     //add first wave of monster
-    cMonster("mario",10)
+    //cMonster("mario",10)
 
     //edit UI
     document.getElementById("pauseBtn").value = "start";
@@ -194,11 +156,33 @@ function imageload() {
 
     //light tower
     lightTowerI = new Image();
-    lightTowerI.src = "images/light_tower.png"
+    lightTowerI.src = "images/light_tower.png";
+    //light tower shots
+    ltS = {
+        images: ["images/lightShot.png"],
+        frames: {width:30, height:30, count:20},
+        animations: {
+            fire:[10,13,'fire1',.1],
+            fire1:[14,19]
+        }
+    };
+    light = new createjs.SpriteSheet(ltS);
 
     //ice tower
     iceTowerI = new Image();
     iceTowerI.src = "images/ice_tower.png";
+    //ice tower shots
+    itS = {
+        images: ["images/iceShot.png"],
+        frames: {width:30, height:30, count:4},
+        animations: {
+            fire:[3,3,"fire1",.5],
+            fire1:[2,2,"fire2",.5],
+            fire2:[1,1,"fire3"],
+            fire3:[0]
+        }
+    };
+    ice = new createjs.SpriteSheet(itS);
 
     //hp image
     healthbarI = new Image();
@@ -230,6 +214,19 @@ function imageload() {
     };
     warriorI = new createjs.SpriteSheet(s2);
 
+    //armor unit
+    s3 = {
+        images: ["images/Armos.png"],
+        frames: {width:32, height:35, count:16},
+        animations: {
+            right:[0,3],
+            up:[4,7],
+            left:[8,11],
+            down:[12,15]
+        }
+    };
+    armoredI = new createjs.SpriteSheet(s3); 
+
 };
 
 /*#########################################################################
@@ -241,15 +238,19 @@ function imageload() {
 function addTower() {
     //light tower
     towerData["lightTower"] =
-    {"image":lightTowerI, "type":"Single", "splashArea":[false],
+    {"image":lightTowerI, "w":30, "h":30,
+    "type":"Single", "splashArea":[false],
     "effect":false,
-    "range":[96,96,112,112], "cost":[15,30,50,80], "cd":[20,15,10,10], "damage":[5,10,20,30]}
+    "range":[96,96,112,112], "cost":[15,30,60,120], "cd":[20,15,10,10],
+     "damage":[5,12,30,65], "shot":light, "speed":10}
 
     //ice tower
     towerData["iceTower"] =
-    {"image":iceTowerI, "type":"Splash", "splashArea":[16,16,32,48], 
+    {"image":iceTowerI, "w":30, "h":30,
+    "type":"Splash", "splashArea":[16,16,32,48], 
     "effect":true, "slow":[.25,.4,.5,.7], "slowDuration":[20,20,25,25],
-    "range":[80,80,96,96], "cost":[20,45,70,150], "cd":[20,20,20,15], "damage":[5,10,15,20]}
+    "range":[80,80,96,96], "cost":[20,40,80,160], "cd":[20,20,20,15],
+    "damage":[5,10,20,40], "shot":ice, "speed":10}
 }
 
 
@@ -308,6 +309,10 @@ function buildTower(event) {
                 newTower.range = towerType["range"][0];
                 newTower.maxCd = towerType["cd"][0];
                 newTower.cd = 0;
+                newTower.shot = towerType["shot"];
+                newTower.w = towerType["w"];
+                newTower.h = towerType["h"];
+                newTower.speed = towerType["speed"]
                 newTower.damage = towerType["damage"][0];
                 newTower.bonus = 
                 Math.round(castleData["attack"]/100*newTower.damage);
@@ -377,9 +382,8 @@ function updateInfo(tower) {
     document.getElementById("infoText").innerHTML = 
     (targetTower.level < targetTower.maxLevel)?
     "Lvl: " + tower.level +" --> " + (tower.level+1) + "<br>" +
-    "Dmg: " + tower.damage + " --> " + 
+    "Dmg: " + tower.damage + "(+"+ tower.bonus + ")" +" --> " + 
     towerData[tower.name]["damage"][tower.level] + "<br>" +
-    "Bonus Dmg: " + tower.bonus + "<br>" +
     "Range: " + tower.range/32 + " --> " +  
     towerData[tower.name]["range"][tower.level]/32 + "<br>" +
     "Atk Spd: " + tower.maxCd/20 + " --> " +  
@@ -391,8 +395,7 @@ function updateInfo(tower) {
     Math.ceil(tower.sell/2)
 
     : "Lvl: " + tower.level + "<br>" +
-    "Dmg: " + tower.damage + "<br>" +
-    "Bonus Dmg: " + tower.bonus + "<br>" +
+    "Dmg: " + tower.damage + "(+" + tower.bonus + ")" + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
     "Atk Spd: " + tower.maxCd/20 + "<br>" +
     effect +
@@ -461,6 +464,11 @@ function addMonster() {
     monsterData["warrior"] =
     {"image":warriorI, "w": 24, "h": 31, 
     "speed":6, "hp":6, "bounty":2, "damage":1}
+
+    //armored
+    monsterData["armored"] =
+    {"image":armoredI, "w": 32, "h": 35, 
+    "speed":2, "hp":15, "bounty":2, "damage":1}
 }
 
 
@@ -492,6 +500,9 @@ function cMonster(type,amt) {
         //add monster to array
         monsters.push(newMonster)
         stage.addChild(newMonster)
+        if (i==amt-1) {
+            lastMon = newMonster
+        }
     }
     stage.addChild(castle)
 }
@@ -542,6 +553,10 @@ function tick(event) {
 
         monsterEffect();//controls effect on monster
         towerAttacks();//check for tower attack
+        if (shots) {
+            shotsHit();//check for collison
+            shotsMovement();//controls movement of shots fired
+        };
         monsterMovement();//controls monster movement
 
 
@@ -559,7 +574,7 @@ function tick(event) {
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
         "Time = "+ time + test1 + "\n" 
-
+ 
     stage.update(event); // important!!
 };
 
@@ -575,9 +590,17 @@ function errorTextcd() {
 
 //timer for next wave
 function timer() {
-    if (countDown==0) {
-        nextWave();
-    } else {
+    if (lastMon.y) {
+        if (lastMon.y>0) {
+            countDown = 160;
+            lastMon = false
+        }
+    }
+    else if (countDown==0) {
+        cMonster("mario",2)
+        countDown--
+    } 
+    else if (countDown>0) {
         countDown--;
         document.getElementById("cdTimer").innerHTML = Math.round(countDown/2)/10;
     }
@@ -717,28 +740,9 @@ function towerAttacks() {
                 };
                 for (var j=0;j<monsters.length;j++) {
                     if (inRange(towers[i],monsters[j]) && monsters[j].y>=0) {
-                        if (towers[i].splashArea) {
-                            splashDmg(towers[i],monsters[j],towers[i].effect)
-                        } else {
-                            monsters[j].currentHp-=towers[i].damage + towers[i].bonus;
-                            monsters[j].getChildAt(0).sourceRect = 
-                            new createjs.Rectangle(0,0,monsters[j]
-                                .currentHp/monsters[j].maxHp*monsters[j].w,3);
-                            towers[i].cd=towers[i].maxCd;
-
-                            //remove monster from map
-                            if (monsters[j].currentHp<=0) {
-                                stage.removeChild(monsters[j]);
-                                cash+=monsters[j].bounty;
-                                score+=monsters[j].bounty;
-                                monsters.splice(j,1);
-                                document.getElementById("cash").innerHTML="Cash: "+
-                                cash;
-                                document.getElementById("score").innerHTML="Score: "+
-                                score;
-                            }
-                            break;
-                        }
+                        cShots(towers[i],monsters[j])
+                        towers[i].cd = towers[i].maxCd;
+                        break;
                     }
                 }
             } else {
@@ -761,50 +765,93 @@ function inRange(tower,mon) {
     }
 };
 
-//check splash range
-function splashDmg(tower,mon,effect) {
-    var monX = mon.x + mon.w/2
-    var monY = mon.y + mon.h
-    var monsterDead = []
-    for (var i=0;i<monsters.length;i++) {
-        var dx=Math.abs(monX-(monsters[i].x+monsters[i].w/2));
-        var dy=Math.abs(monY-(monsters[i].y+monsters[i].h));
-        var dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
-        if (dist<=tower.splashArea) {
-            monsters[i].currentHp-=tower.damage + tower.bonus;
-            monsters[i].getChildAt(0).sourceRect = 
-            new createjs.Rectangle(0,0,monsters[i]
-                .currentHp/monsters[i].maxHp*monsters[i].w,3);
-            if (effect && monsters[i].cd==0) {
-                if (tower.name == "iceTower") {
-                    if (monsters[i].speed*(1-tower.slow)<=.5) {
-                        monsters[i].speed = .5
-                    } else {
-                        monsters[i].speed *= (1-tower.slow)
-                    }
-                    monsters[i].cd = tower.slowDuration
-                }
-            }
+//create shot animation
+function cShots(tower,mon) {
+    var dx=((mon.x + mon.w/2) - tower.x);
+    var dy=((mon.y + mon.h) - tower.y);
+    var dist=Math.sqrt(Math.pow(Math.abs(dx),2) + Math.pow(Math.abs(dy),2));
+    var newShot = new createjs.Sprite(tower.shot,'fire')
+    //calculations for travelling
+    newShot.x = tower.x
+    newShot.y = tower.y - tower.h/2
+    newShot.d = dist //destination
+    var degree = Math.asin(dy/dist)
+    if (dx>0) {
+        newShot.dX = tower.speed*Math.cos(degree)
+    } else {
+        newShot.dX = -tower.speed*Math.cos(degree)
+    }
+    newShot.dY = tower.speed*Math.sin(degree)
+    newShot.c = 0 //counter
+    //shots properties
+    newShot.w = tower.w
+    newShot.h = tower.h
+    newShot.damage = tower.damage + tower.bonus
+    newShot.speed = tower.speed
 
-            //remove monster from map
-            if (monsters[i].currentHp<=0) {  
-                monsterDead.push(i);  
+    shots.push(newShot)
+    stage.addChild(newShot)
+};
+
+//shots movement
+function shotsMovement() {
+    var shotsRemoved = [];
+    for (var i=0;i<shots.length;i++) {
+        if (shots[i].c<shots[i].d) {
+            shots[i].x += shots[i].dX
+            shots[i].y += shots[i].dY
+            shots[i].c += shots[i].speed
+        } else {
+            shotsRemoved.push(i);
+        }
+    }
+    if (shotsRemoved) {
+        shotsRemoved.sort(function(a,b){return b-a});//sort descending order
+        for (var i=0;i<shotsRemoved.length;i++) {
+            stage.removeChild(shots[shotsRemoved[i]])
+            shots.splice(i,1)
+        }
+    }
+};
+
+function shotsHit() {
+    var shotsRemoved = [];
+    for (var i=0;i<shots.length;i++) {
+        for (var j=0;j<monsters.length;j++) {
+            if (shots[i].x <= (monsters[j].x+monsters[j].w) &&
+                monsters[j].x <= (shots[i].x+monsters[j].w) &&
+                shots[i].y <= (monsters[j].y+monsters[j].h) &&
+                monsters[j].y <= (shots[i].y+monsters[j].h)) {
+                monsters[j].currentHp-=shots[i].damage
+                monsters[j].getChildAt(0).sourceRect = 
+                new createjs.Rectangle(0,0,monsters[j]
+                    .currentHp/monsters[j].maxHp*monsters[j].w,3);
+                shotsRemoved.push(i);
+
+                //remove monster when dead
+                if (monsters[j].currentHp<=0) {
+                    stage.removeChild(monsters[j]);
+                    cash+=monsters[j].bounty;
+                    score+=monsters[j].bounty;
+                    monsters.splice(j,1);
+                    document.getElementById("cash").innerHTML="Cash: "+
+                    cash;
+                    document.getElementById("score").innerHTML="Score: "+
+                    score;
+                }
+                break;
             }
         }
     }
-    monsterDead.sort(function(a,b){return b-a});
-    for (var i=0;i<monsterDead.length;i++) {
-        stage.removeChild(monsters[monsterDead[i]]);
-        cash+=monsters[monsterDead[i]].bounty;
-        score+=monsters[monsterDead[i]].bounty;
-        monsters.splice(monsterDead[i],1);
-        document.getElementById("cash").innerHTML="Cash: "+
-        cash;        
-        document.getElementById("score").innerHTML="Score: "+
-        score;        
+    if (shotsRemoved) {
+        shotsRemoved.sort(function(a,b){return b-a});//sort descending order
+        for (var i=0;i<shotsRemoved.length;i++) {
+            stage.removeChild(shots[shotsRemoved[i]])
+            shots.splice(i,1)
+        }
     }
-    tower.cd=tower.maxCd;
-}
+};
+
 
 /*#########################################################################
 
@@ -867,22 +914,27 @@ function ff() {
 function nextWave() {
     if (!createjs.Ticker.getPaused()) {
         wave++;
-        countDown = 260;
         document.getElementById("wave").innerHTML = "Wave: " + wave;
         if (wave%10 ==0) {
             monsterData["mario"]["bounty"]+=1
             monsterData["warrior"]["bounty"]+=1
+            monsterData["armored"]["bounty"]+=1
 
             monsterData["mario"]["damage"]+=1
             monsterData["warrior"]["damage"]+=1
+            monsterData["armored"]["damage"]+=1
         }
-        if (wave%3 != 0) {
-            monsterData["mario"]["hp"]*=1.5
-            cMonster("mario",10)
+        if (wave%5 == 0) {
+            cMonster("warrior",10);
+            monsterData["warrior"]["hp"]*=2.5
+        }
+        else if (wave%3 == 0) {
+            cMonster("armored",10);
+            monsterData["armored"]["hp"]*=1.6
         }
         else {
-            cMonster("warrior",10);
-            monsterData["warrior"]["hp"]*=1.5
+            monsterData["mario"]["hp"]*=1.5
+            cMonster("mario",10)
         }
     }
 }
@@ -947,6 +999,49 @@ function isOver() {
                 Game Grids
 
 #########################################################################*/
+
+//highlight grid when tower is selected
+var targetGrid = new createjs.Shape();
+targetGrid.graphics.beginStroke("#fff").drawRect(0,0,32,32);
+
+//show tower image when hover over grid
+function gridData() {
+    t1i = new createjs.Bitmap("images/light_tower.png");
+    t1a = new createjs.Shape();
+    t1a.graphics.beginStroke("#000").drawCircle(16,16,
+        towerData["lightTower"]["range"][0]);
+    t1a.alpha = .5;
+    t1 = new createjs.Container();
+    t1.addChild(t1i,t1a);
+
+    t2i = new createjs.Bitmap("images/ice_tower.png");
+    t2a = new createjs.Shape();
+    t2a.graphics.beginStroke("#000").drawCircle(16,16,
+        towerData["iceTower"]["range"][0]);
+    t2a.alpha = .5;
+    t2 = new createjs.Container();
+    t2.addChild(t2i,t2a);
+
+    hoverTower = {"lightTower": t1, "iceTower":t2}
+
+};
+
+//paused screen
+function pauseScreen() {
+    var shade = new createjs.Shape();
+    shade.graphics.beginFill("#d3d3d3").drawRect(0, 0,
+        stage.canvas.width,stage.canvas.height);
+    shade.alpha = .85
+
+    var label = new createjs.Text("GAME PAUSED", "bold 40px Arial", "#FFFFFF");
+    label.textAlign = "center";
+    label.x = stage.canvas.width/2;
+    label.y = stage.canvas.height/2;
+
+    pScreen = new createjs.Container();
+
+    pScreen.addChild(shade, label);
+}
 
 //grid
 function grid() {
