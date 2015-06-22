@@ -82,20 +82,16 @@ function init() {
     //line of creep path
     //path();
 
-    //add first wave of monster
-    //cMonster("mario",10)
-
     //edit UI
     document.getElementById("pauseBtn").value = "start";
-    document.getElementById("castleText").innerHTML = 
-    "Armor: " + castleData["armor"] + "<br>" +
-    "Atk Bonus: " + castleData["attack"] + "%" +"<br>" +
-    "Regen: " + castleData["regen"]
+    document.getElementById("armor").innerHTML = castleData["armor"]; 
+    document.getElementById("bonus").innerHTML = castleData["attack"];
+    document.getElementById("regen").innerHTML = castleData["regen"]
 
-    document.getElementById("score").innerHTML += score; 
-    document.getElementById("cash").innerHTML += cash;
-    document.getElementById("wave").innerHTML += wave; 
-    document.getElementById("health").innerHTML += health;
+    document.getElementById("score").innerHTML = score; 
+    document.getElementById("cash").innerHTML = cash;
+    document.getElementById("wave").innerHTML = wave; 
+    document.getElementById("health").innerHTML = health;
     document.getElementById("cdTimer").innerHTML = (countDown/20);
 
     /*var test = new createjs.Bitmap(canonI)
@@ -162,8 +158,8 @@ function imageload() {
         images: ["images/lightShot.png"],
         frames: {width:30, height:30, count:20},
         animations: {
-            fire:[10,13,'fire1',.1],
-            fire1:[14,19]
+            fire:[10,12,'fire1',2],
+            fire1:[13]
         }
     };
     light = new createjs.SpriteSheet(ltS);
@@ -177,8 +173,8 @@ function imageload() {
         frames: {width:30, height:30, count:4},
         animations: {
             fire:[3,3,"fire1",.5],
-            fire1:[2,2,"fire2",.5],
-            fire2:[1,1,"fire3"],
+            fire1:[2,2,"fire2",2],
+            fire2:[1,1,"fire3",2],
             fire3:[0]
         }
     };
@@ -196,7 +192,7 @@ function imageload() {
             right:[0,7],
             up:[8,15],
             left:[16,23],
-            down:[24,31]
+            down:[24,31,'down',.7]
         }
     };
     marioI = new createjs.SpriteSheet(s1);
@@ -219,10 +215,10 @@ function imageload() {
         images: ["images/Armos.png"],
         frames: {width:32, height:35, count:16},
         animations: {
-            right:[0,3],
-            up:[4,7],
-            left:[8,11],
-            down:[12,15]
+            right:[0,3,'right',.3],
+            up:[4,7,'up',.3],
+            left:[8,11,'left',.3],
+            down:[12,15,'down',.3]
         }
     };
     armoredI = new createjs.SpriteSheet(s3); 
@@ -238,35 +234,51 @@ function imageload() {
 function addTower() {
     //light tower
     towerData["lightTower"] =
-    {"image":lightTowerI, "w":30, "h":30,
-    "type":"Single", "splashArea":[false],
+    {"image":lightTowerI, "w":30, "h":30,//dimension of shots
+    "type":"Single", "splash":[false],
     "effect":false,
     "range":[96,96,112,112], "cost":[15,30,60,120], "cd":[20,15,10,10],
-     "damage":[5,12,30,65], "shot":light, "speed":10}
+     "damage":[10,20,40,80], "shot":light, "speed":10}
 
     //ice tower
     towerData["iceTower"] =
     {"image":iceTowerI, "w":30, "h":30,
-    "type":"Splash", "splashArea":[16,16,32,48], 
-    "effect":true, "slow":[.25,.4,.5,.7], "slowDuration":[20,20,25,25],
-    "range":[80,80,96,96], "cost":[20,40,80,160], "cd":[20,20,20,15],
+    "type":"Splash", "splash":[16,32,32,48], 
+    "effect":true, "slow":[.25,.4,.5,.7], "slowDuration":[20,25,30,35],
+    "range":[80,80,96,96], "cost":[20,40,80,160], "cd":[20,20,15,15],
     "damage":[5,10,20,40], "shot":ice, "speed":10}
 }
 
 
 //buying tower
 function buyTower(type) {
+    var splash = ""
+    var effect = ""
     towerType = towerData[type];
     towerName = type
     if (towers.length != 0) {
         toggleAoe();        
     }
+
+    if (towerType["effect"]) {
+        if (towerName=="iceTower") {
+            effect = "Slow: " +  
+            (towerType["slow"][0]*100) + "%" + "<br>"
+        }
+    }
+
+    if (towerType["splash"][0]) {    
+        splash = "Splash: " +
+        towerType["splash"][0]/32 + "tiles" + "<br>" 
+    };
     stage.removeChild(targetGrid);
     document.getElementById("infoText").innerHTML = 
     "Dmg Type: " + towerType["type"] + "<br>" +
     "Dmg: " + towerType["damage"][0] + "<br>" +
+    splash +
     "Range: " + towerType["range"][0]/32 + " tiles" +"<br>" +
     "Atk Spd: " + towerType["cd"][0]/20 + "APS" + "<br>" +
+    effect +
     "Cost: " + towerType["cost"][0] + "<br>"
 };
 
@@ -323,7 +335,7 @@ function buildTower(event) {
                 newTower.y = event.target.coord[1];
                 newTower.coord = event.target.coord
                 newTower.on("click", handleInfo); 
-                newTower.splashArea = towerType["splashArea"][0];
+                newTower.splash = towerType["splash"][0];
                 if (towerName == "iceTower") {
                     newTower.slow = towerType["slow"][0];
                     newTower.slowDuration = towerType["slowDuration"][0];
@@ -338,7 +350,7 @@ function buildTower(event) {
                 stage.addChild(newTower);
                 towerNum++;
                 cash -= towerType["cost"][0];
-                document.getElementById("cash").innerHTML = "Cash: " + cash;
+                document.getElementById("cash").innerHTML = cash;
                 towerType = false;
                 towerName = false;
                 toggleAoe();
@@ -373,11 +385,24 @@ function handleInfo(event) {
 //update tower info
 function updateInfo(tower) {
     var effect = ""
+    var splash = ""
+    var sellPrice = Math.ceil(tower.sell*.7)
 
-    if (tower.name=="iceTower") {
-        effect = "Slow: " + (tower.slow*100) + "%" + " --> " +  
-        (towerData[tower.name]["slow"][tower.level]*100) + "%" + "<br>"
+    if (wave==0) {
+        sellPrice = tower.sell
     }
+
+    if (tower.effect) {
+        if (tower.name=="iceTower") {
+            effect = "Slow: " + (tower.slow*100) + "%" + " --> " +  
+            (towerData[tower.name]["slow"][tower.level]*100) + "%" + "<br>"
+        }
+    }
+
+    if (tower.splash) {    
+        splash = "Splash: " + tower.splash/32 + " --> " +  
+        towerData[tower.name]["splash"][tower.level]/32 + "<br>" 
+    };
     //tower info
     document.getElementById("infoText").innerHTML = 
     (targetTower.level < targetTower.maxLevel)?
@@ -386,29 +411,31 @@ function updateInfo(tower) {
     towerData[tower.name]["damage"][tower.level] + "<br>" +
     "Range: " + tower.range/32 + " --> " +  
     towerData[tower.name]["range"][tower.level]/32 + "<br>" +
+    splash +
     "Atk Spd: " + tower.maxCd/20 + " --> " +  
     towerData[tower.name]["cd"][tower.level]/20 + "<br>" +
     effect +
     "<input type='button' value='Upgrade' onclick='upgradeTower()'>" + 
     towerData[tower.name]["cost"][tower.level] + "<br>" +
     "<input type='button' value='Sell' onclick='sellTower()'>" +
-    Math.ceil(tower.sell/2)
+    sellPrice
 
     : "Lvl: " + tower.level + "<br>" +
     "Dmg: " + tower.damage + "(+" + tower.bonus + ")" + "<br>" +
     "Range: " + tower.range/32 +  "<br>" + 
+    splash +
     "Atk Spd: " + tower.maxCd/20 + "<br>" +
     effect +
     "Max level" + "<br>" +
     "<input type='button' value='Sell' onclick='sellTower()'>" +
-    Math.ceil(tower.sell/2)
+    sellPrice
 };
 
 //upgrading of tower
 function upgradeTower() {
     if (targetTower.cost<=cash) {
         cash-=targetTower.cost
-        document.getElementById("cash").innerHTML = "Cash: " + cash
+        document.getElementById("cash").innerHTML = cash
         if (targetTower.name == 'iceTower') {
             targetTower.slow = 
             towerData[targetTower.name]["slow"][targetTower.level]
@@ -437,10 +464,20 @@ function upgradeTower() {
 
 function sellTower() {
     targetTower.bg.mouseEnabled = true
-    cash += Math.ceil(targetTower.sell/2)
-    score -= 10
-    document.getElementById("cash").innerHTML = "Cash: " + cash
-    document.getElementById("score").innerHTML = "Score: " + score
+    if (wave!=0) {
+        cash += Math.ceil(targetTower.sell/2)
+    } else {
+        cash += targetTower.sell
+    }
+    var finalScore
+    finalScore = score - towerData[targetTower.name]["cost"][0]
+    if (finalScore<0) {
+        score = 0
+    } else {
+        score = finalScore
+    }
+    document.getElementById("cash").innerHTML = cash
+    document.getElementById("score").innerHTML = score
     document.getElementById("infoText").innerHTML = ""
     stage.removeChild(targetGrid)
     stage.removeChild(targetTower)
@@ -468,7 +505,7 @@ function addMonster() {
     //armored
     monsterData["armored"] =
     {"image":armoredI, "w": 32, "h": 35, 
-    "speed":2, "hp":15, "bounty":2, "damage":1}
+    "speed":2, "hp":20, "bounty":2, "damage":1}
 }
 
 
@@ -488,8 +525,8 @@ function cMonster(type,amt) {
         newMonster.w = mtype["w"]
         newMonster.h = mtype["h"] 
         newMonster.x = 96 - newMonster.w/2
-        newMonster.y = - newMonster.h - i*newMonster.h*1.5
-        newMonster.dmg = mtype["damage"]
+        newMonster.y = - newMonster.h - (amt-i-1)*newMonster.h*1.5
+        newMonster.damage = mtype["damage"]
         newMonster.originSpeed = mtype["speed"]
         newMonster.speed = mtype["speed"]
         newMonster.currentHp = mtype["hp"]
@@ -500,7 +537,7 @@ function cMonster(type,amt) {
         //add monster to array
         monsters.push(newMonster)
         stage.addChild(newMonster)
-        if (i==amt-1) {
+        if (i==0) {
             lastMon = newMonster
         }
     }
@@ -573,7 +610,8 @@ function tick(event) {
 
     time = Math.round(createjs.Ticker.getTime(true)/100)/10
     output.text = "Paused = "+createjs.Ticker.getPaused()+"\n"+
-        "Time = "+ time + test1 + "\n" 
+        "Time = "+ time + test1 + "\n" +
+        monsters[0].cd
  
     stage.update(event); // important!!
 };
@@ -590,14 +628,14 @@ function errorTextcd() {
 
 //timer for next wave
 function timer() {
-    if (lastMon.y) {
+    if (lastMon) {
         if (lastMon.y>0) {
             countDown = 160;
             lastMon = false
         }
     }
     else if (countDown==0) {
-        cMonster("mario",2)
+        nextWave()
         countDown--
     } 
     else if (countDown>0) {
@@ -705,8 +743,8 @@ function monsterMovement() {
         //monster attacks castle
         else { 
             if (!mob.dead) {
-                health-=mob.dmg-castleData["armor"];
-                document.getElementById("health").innerHTML ="Health: " + health;
+                health-=mob.damage-castleData["armor"];
+                document.getElementById("health").innerHTML = health;
                 mob.dead++;
                 stage.removeChild(mob);
                 monsters.splice(i,1);
@@ -719,14 +757,24 @@ function monsterMovement() {
 function monsterEffect() {
     for (var i=0;i<monsters.length;i++) {
         var mob = monsters[i]
-        if (mob.cd>1) {
+        if (mob.cd>=1) {
             mob.cd--;
         } 
-        else if (mob.cd == 1) {
+        else if (mob.cd == 0) {
             mob.speed = mob.originSpeed
             mob.cd--;
         }
     }
+}
+
+//check if monster is dead
+function isDead(index) {
+    stage.removeChild(monsters[index]);
+    cash+=monsters[index].bounty;
+    score+=monsters[index].bounty;
+    monsters.splice(index,1);
+    document.getElementById("cash").innerHTML= cash;
+    document.getElementById("score").innerHTML= score;
 }
 
 //tower attacking
@@ -753,9 +801,9 @@ function towerAttacks() {
 }
 
 //check range
-function inRange(tower,mon) {
-    var dx=Math.abs(tower.x+16-(mon.x+mon.w/2));
-    var dy=Math.abs(tower.y+16-(mon.y+mon.h));
+function inRange(tower,monster) {
+    var dx=Math.abs(tower.x+16-(monster.x+monster.w/2));
+    var dy=Math.abs(tower.y+16-(monster.y+monster.h));
     var dist=Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2));
     if (dist<=tower.range) {
         return true
@@ -766,9 +814,9 @@ function inRange(tower,mon) {
 };
 
 //create shot animation
-function cShots(tower,mon) {
-    var dx=((mon.x + mon.w/2) - tower.x);
-    var dy=((mon.y + mon.h) - tower.y);
+function cShots(tower,monster) {
+    var dx=((monster.x + monster.w/2) - tower.x);
+    var dy=((monster.y + monster.h) - tower.y);
     var dist=Math.sqrt(Math.pow(Math.abs(dx),2) + Math.pow(Math.abs(dy),2));
     var newShot = new createjs.Sprite(tower.shot,'fire')
     //calculations for travelling
@@ -782,12 +830,20 @@ function cShots(tower,mon) {
         newShot.dX = -tower.speed*Math.cos(degree)
     }
     newShot.dY = tower.speed*Math.sin(degree)
-    newShot.c = 0 //counter
+    newShot.c = 0 //counter for dist travelled
     //shots properties
+    newShot.name = tower.name
     newShot.w = tower.w
     newShot.h = tower.h
-    newShot.damage = tower.damage + tower.bonus
     newShot.speed = tower.speed
+    newShot.damage = tower.damage + tower.bonus
+    newShot.splash = tower.splash
+    newShot.effect = tower.effect
+    //special properties
+    if (tower.name == "iceTower") {
+        newShot.slow = tower.slow
+        newShot.slowDuration = tower.slowDuration
+    };
 
     shots.push(newShot)
     stage.addChild(newShot)
@@ -819,25 +875,30 @@ function shotsHit() {
     for (var i=0;i<shots.length;i++) {
         for (var j=0;j<monsters.length;j++) {
             if (shots[i].x <= (monsters[j].x+monsters[j].w) &&
-                monsters[j].x <= (shots[i].x+monsters[j].w) &&
+                monsters[j].x <= (shots[i].x+shots[i].w) &&
                 shots[i].y <= (monsters[j].y+monsters[j].h) &&
-                monsters[j].y <= (shots[i].y+monsters[j].h)) {
+                monsters[j].y <= (shots[i].y+shots[i].h)) {
+
+                shotsRemoved.push(i);
+
+                if (shots[i].splash) {
+                    shotsSplash(shots[i]);
+                } 
+                else { //single hits
                 monsters[j].currentHp-=shots[i].damage
                 monsters[j].getChildAt(0).sourceRect = 
                 new createjs.Rectangle(0,0,monsters[j]
                     .currentHp/monsters[j].maxHp*monsters[j].w,3);
-                shotsRemoved.push(i);
+
+                if (shots[i].effect && monsters[j].cd) {
+                    shotsEffect(shots[i],monsters[j]);
+                };
 
                 //remove monster when dead
                 if (monsters[j].currentHp<=0) {
-                    stage.removeChild(monsters[j]);
-                    cash+=monsters[j].bounty;
-                    score+=monsters[j].bounty;
-                    monsters.splice(j,1);
-                    document.getElementById("cash").innerHTML="Cash: "+
-                    cash;
-                    document.getElementById("score").innerHTML="Score: "+
-                    score;
+                    isDead(j);
+                }
+
                 }
                 break;
             }
@@ -847,10 +908,60 @@ function shotsHit() {
         shotsRemoved.sort(function(a,b){return b-a});//sort descending order
         for (var i=0;i<shotsRemoved.length;i++) {
             stage.removeChild(shots[shotsRemoved[i]])
-            shots.splice(i,1)
+            shots.splice(shotsRemoved[i],1)
         }
     }
 };
+
+//splash damage
+function shotsSplash(shot) {
+    var hitX = shot.x - shot.splash
+    var hitY = shot.y - shot.splash
+    var rangeX = shot.w + shot.splash*2
+    var rangeY = shot.h + shot.splash*2
+    var monstersDead = []
+    for (var i=0;i<monsters.length;i++) {
+        if (hitX <= (monsters[i].x+monsters[i].w) &&
+            monsters[i].x <= (hitX+rangeX) &&
+            hitY <= (monsters[i].y+monsters[i].h) &&
+            monsters[i].y <= (hitY+rangeY)) {
+
+            monsters[i].currentHp -= shot.damage;
+            monsters[i].getChildAt(0).sourceRect = 
+            new createjs.Rectangle(0,0,monsters[i]
+                .currentHp/monsters[i].maxHp*monsters[i].w,3);
+
+            if (monsters[i].currentHp<=0) {
+                monstersDead.push(i)
+            } 
+            else { //apply effects
+                if (shot.effect) {
+                    shotsEffect(shot, monsters[i]);
+                }
+            }
+        }
+    }
+    if (monstersDead) {
+        monstersDead.sort(function(a,b){return b-a});
+        for (var i=0;i<monstersDead.length;i++) {
+            isDead(monstersDead[i]);
+        }
+    }
+};
+
+//handle effects on monsters
+function shotsEffect(shot,monster) {
+    if (shot.name=="iceTower") {
+        if (monster.cd<=0) {
+            if (monster.speed*(1-shot.slow)<=.5) {
+                monster.speed = .5
+            } else {
+                monster.speed *= (1-shot.slow)
+            }
+        } 
+    }
+    monster.cd = shot.slowDuration
+}
 
 
 /*#########################################################################
@@ -914,7 +1025,8 @@ function ff() {
 function nextWave() {
     if (!createjs.Ticker.getPaused()) {
         wave++;
-        document.getElementById("wave").innerHTML = "Wave: " + wave;
+        document.getElementById("cdTimer").innerHTML = 0;
+        document.getElementById("wave").innerHTML = wave;
         if (wave%10 ==0) {
             monsterData["mario"]["bounty"]+=1
             monsterData["warrior"]["bounty"]+=1
@@ -925,16 +1037,16 @@ function nextWave() {
             monsterData["armored"]["damage"]+=1
         }
         if (wave%5 == 0) {
-            cMonster("warrior",10);
-            monsterData["warrior"]["hp"]*=2.5
+            cMonster("warrior",8);
+            monsterData["warrior"]["hp"]*=2.4
         }
         else if (wave%3 == 0) {
-            cMonster("armored",10);
-            monsterData["armored"]["hp"]*=1.6
+            cMonster("armored",8);
+            monsterData["armored"]["hp"]*=3
         }
         else {
-            monsterData["mario"]["hp"]*=1.5
-            cMonster("mario",10)
+            cMonster("mario",8)
+            monsterData["mario"]["hp"]*=1.3
         }
     }
 }
@@ -956,27 +1068,16 @@ function togglePause() {
             if (!paused) {
                 if (monsters[i].pos[j]==2) {
                     monsters[i].pos[j]=1;
-                    switch (j) {
-                        case 0:
-                            monsters[i].getChildAt(1).gotoAndStop("up");
-                            break;
-                        case 1:
-                            monsters[i].getChildAt(1).gotoAndStop("right");
-                            break;
-                        case 2:
-                            monsters[i].getChildAt(1).gotoAndStop("down");
-                            break;
-                        case 3:
-                            monsters[i].getChildAt(1).gotoAndStop("left");
-                            break;                            
-
-                    }
+                    monsters[i].getChildAt(1).gotoAndStop();
+                    break;
                 }
             } else {
-                cAnimation();
+                monsters[i].getChildAt(1).gotoAndPlay();
             }
         }
     }
+
+
 
 };
 

@@ -22,15 +22,19 @@
 </head>
 <body onload="init()">
 	<div id="gameStatus">
-		<p id="score" class="gameInfo">Score: </p>
-		<p id="cash" class="gameInfo">Cash: </p>
-		<p id="wave" class="gameInfo">Wave: </p>
+		<p class="gameInfo">Score: <span id="score"></span></p>
+		<p class="gameInfo">Cash: <span id="cash"></span></p>
+		<p class="gameInfo">Wave: <span id="wave"></span> </p>
 		<div>
 			<p class="titles">Castle Info</p>
-			<p id="health" class="gameInfo">Health: </p>
-			<p id="castleText" class="gameInfo"></p>
+			<p class="gameInfo">Health: <span id="health"></span></p>
+			<p class="gameInfo">
+				Armor: <span id="armor"></span><br>
+				Att Bonus: <span id="bonus"></span>%<br>
+				Regen: <span id="regen"></span><br>
+			</p>
 		</div>		
-		<div class="gameInfo"> Next wave:<span id="cdTimer" class="gameInfo"></span>s
+		<div class="gameInfo">Next wave:<span id="cdTimer" class="gameInfo"></span>s
 		</div>
 		<input type="button" value="start" id="pauseBtn" onclick="togglePause()">
 		<br>
