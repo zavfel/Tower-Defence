@@ -23,44 +23,43 @@
 <body onload="init()">
 	<div id="gameStatus">
 		<p class="gameInfo">Score: <span id="score"></span></p>
-		<p class="gameInfo">Cash: <span id="cash"></span></p>
-		<p class="gameInfo">Wave: <span id="wave"></span> </p>
+		<p class="gameInfo" style="color:#f00">Health: <span id="health"></span></p>
+		<p class="gameInfo" style="color:#fa0;">Cash: <span id="cash"></span></p>
 		<div>
 			<p class="titles">Castle Info</p>
-			<p class="gameInfo">Health: <span id="health"></span></p>
-			<p class="gameInfo">
+			<p class="gameInfo" style="color:#00f">
 				Armor: <span id="armor"></span><br>
 				Att Bonus: <span id="bonus"></span>%<br>
 				Regen: <span id="regen"></span><br>
 			</p>
-		</div>		
-		<div class="gameInfo">Next wave:<span id="cdTimer" class="gameInfo"></span>s
-		</div>
+		</div>	
 		<input type="button" value="start" id="pauseBtn" onclick="togglePause()">
-		<br>
-		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()">
-		<input type="button" value="1x" id="ffBtn" onclick="ff()"><br>
+		<input type="button" value="restart" id="restartBtn" onclick="restart()"><br> 
 		<input type="button" value="Check Range" id="rangeBtn" onclick="towerType=(towerType)?false:true;toggleAoe()"><br>
-		<input type="button" value="restart" id="restartBtn" onclick="restart()"><br>
-		<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
-			<img src="images/light_tower.png" class="tower">
-			<p class="towerName">Light Tower</p>
-		</button>			
-		<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
-			<img src="images/ice_tower.png" class="tower">
-			<p class="towerName">Ice Tower</p>
-		</button>
-
-		<div> 
-			<p class="titles">Tower Info</p>
-			<p id="infoText"></p>
-			<p id="errorText"></p>
-		</div>
+		<input type="button" value="1x" id="ffBtn" onclick="ff()">
+		<input type="button" value="next wave" id="nextBtn" onclick="nextWave()">
+		<p class="gameInfo">Wave: <span id="wave"></span> </p>	
+		<p class="gameInfo">Next wave:<span id="cdTimer" class="gameInfo"></span>s</p>
+		<p class="titles">Tower Info</p>
+		<p id="infoText"></p>
+		<p id="errorText"></p>
 	</div>
 	<div id="game">
 		<canvas id="playingField" width="896" height="544"> <!--896/544-->
 		alternate content
 		</canvas>
+	</div>
+	<div id="btmMenu">
+		<div id="towerMenu">		
+			<button type="submit" class="towerBtn" onclick="buyTower('iceTower')">
+				<img src="images/ice_tower.png" class="tower">
+				<p class="towerName">Ice Tower</p>
+			</button>
+			<button type="submit" class="towerBtn" onclick="buyTower('lightTower')">
+				<img src="images/light_tower.png" class="tower">
+				<p class="towerName">Light Tower</p>
+			</button>	
+		</div>
 	</div>
 </body>
 </html>
